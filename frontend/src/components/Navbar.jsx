@@ -6,6 +6,7 @@ const links = [
     { path: '/map', icon: '🗺', label: 'GEO MAP', sub: 'Money Flow' },
     { path: '/alerts', icon: '⚡', label: 'ALERTS', sub: 'Fraud Feed' },
     { path: '/investigation', icon: '◉', label: 'CASES', sub: 'Investigation' },
+    { path: '/intelligence', icon: '◈', label: 'INTEL', sub: 'Flow Analysis' },
   ]
 
 export default function Navbar() {

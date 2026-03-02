@@ -7,6 +7,8 @@ import GraphView from './pages/GraphView'
 import Alerts from './pages/Alerts'
 import Investigation from './pages/Investigation'
 import IndiaMap from './pages/IndiaMap'
+import Intelligence from './pages/Intelligence'
+
 
 export default function App() {
   return (
@@ -31,6 +33,8 @@ export default function App() {
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/investigation" element={<Investigation />} />
             <Route path="/map" element={<IndiaMap />} />
+            <Route path="/intelligence" element={<Intelligence />} />
+
           </Routes>
         </main>
       </div>
