@@ -1,0 +1,15 @@
+{
+  "name": "moneytrail-ai",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently -n frontend,backend,ml-service \"cd frontend && npm run dev\" \"cd backend && npm run dev\" \"cd ml-service && .venv\\\\Scripts\\\\uvicorn main:app --reload --port 8001\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
