@@ -1,381 +1,449 @@
-import { useState, useEffect, useRef } from 'react'
-import axios from 'axios'
+import { useEffect, useRef, useState } from 'react'
+import * as d3 from 'd3'
 
-const API = 'http://localhost:5001'
-
-// Major Indian cities with coordinates mapped to SVG viewBox 0 0 800 900
-const CITIES = {
-  Mumbai:     { x: 185, y: 520, state: 'Maharashtra' },
-  Delhi:      { x: 310, y: 235, state: 'Delhi' },
-  Bengaluru:  { x: 280, y: 660, state: 'Karnataka' },
-  Chennai:    { x: 330, y: 690, state: 'Tamil Nadu' },
-  Hyderabad:  { x: 300, y: 580, state: 'Telangana' },
-  Kolkata:    { x: 490, y: 370, state: 'West Bengal' },
-  Pune:       { x: 210, y: 545, state: 'Maharashtra' },
-  Ahmedabad:  { x: 185, y: 390, state: 'Gujarat' },
-  Jaipur:     { x: 255, y: 295, state: 'Rajasthan' },
-  Lucknow:    { x: 375, y: 285, state: 'Uttar Pradesh' },
-  Bhopal:     { x: 305, y: 390, state: 'Madhya Pradesh' },
-  Patna:      { x: 430, y: 320, state: 'Bihar' },
-  Surat:      { x: 195, y: 450, state: 'Gujarat' },
-  Nagpur:     { x: 340, y: 460, state: 'Maharashtra' },
-  Chandigarh: { x: 295, y: 185, state: 'Punjab' },
+// Real simplified India GeoJSON polygon (hand-traced from actual coordinates)
+const INDIA_GEOJSON = {
+  type: "Feature",
+  geometry: {
+    type: "Polygon",
+    coordinates: [[
+      // Northwest — Pakistan border, Rann of Kutch
+      [68.1, 23.6], [68.7, 22.8], [70.2, 22.3], [71.5, 22.0], [72.6, 21.6],
+      [73.3, 21.2], [74.5, 20.7], [76.0, 20.4],
+      // South tip — Karnataka, Kerala, Tamil Nadu
+      [77.5, 19.8], [78.3, 18.5], [79.0, 17.5], [79.5, 16.0],
+      [80.0, 14.5], [80.3, 13.5], [80.3, 12.0], [79.8, 10.3],
+      [79.0, 9.5],  [78.0, 8.5],  [77.5, 8.1],  [77.1, 8.4],
+      [76.6, 9.0],  [76.3, 10.0], [76.0, 11.0], [75.5, 12.0],
+      [75.0, 13.5], [74.5, 14.5], [74.0, 15.5], [73.6, 16.5],
+      [73.2, 17.5], [73.0, 18.5], [72.8, 19.5], [72.5, 20.5],
+      // Mumbai coast going north
+      [72.6, 21.5], [72.0, 22.5], [69.5, 22.8],
+      // Gujarat peninsula
+      [68.5, 23.0], [68.0, 23.5], [67.5, 24.0],
+      // NW corner Pakistan/Rajasthan
+      [67.0, 24.5], [66.7, 25.2], [67.5, 26.0], [68.5, 27.0],
+      [69.5, 27.5], [70.5, 28.0], [71.0, 28.5], [70.5, 29.5],
+      [70.0, 30.5], [70.8, 31.5], [71.5, 32.5], [72.5, 33.0],
+      [73.5, 33.5], [74.5, 34.0], [75.5, 34.5],
+      // Kashmir — J&K
+      [76.5, 34.8], [77.5, 35.5], [78.5, 35.5], [79.5, 35.0],
+      [78.5, 34.0], [79.0, 33.5], [79.5, 33.0],
+      // Himachal, Uttarakhand, UP border — Nepal
+      [80.5, 32.5], [81.0, 31.5], [81.5, 30.8], [82.5, 30.5],
+      [83.5, 30.0], [84.5, 29.5], [85.5, 29.5], [86.5, 29.5],
+      [87.0, 29.5], [88.0, 29.5], [88.5, 29.8],
+      // Sikkim, Assam, NE
+      [89.0, 27.0], [89.5, 26.5], [90.5, 26.5], [91.5, 26.5],
+      [92.5, 26.8], [93.5, 26.8], [94.5, 27.0], [95.0, 27.5],
+      [96.0, 28.0], [96.5, 28.5],
+      // Mizoram, Manipur going south
+      [97.0, 27.5], [97.0, 26.5], [96.5, 25.5], [96.0, 24.5],
+      [95.5, 23.5], [95.0, 22.5], [94.5, 22.0], [93.5, 22.0],
+      [93.0, 22.5], [92.5, 23.0], [92.0, 23.5], [91.5, 23.8],
+      // Bangladesh border — West Bengal
+      [91.0, 24.0], [90.5, 23.5], [90.0, 23.0], [89.5, 22.5],
+      [89.0, 22.0], [88.5, 22.0], [88.0, 22.5], [87.5, 22.5],
+      [87.0, 22.0], [86.5, 21.5], [86.0, 21.0],
+      // Odisha coast, AP coast
+      [85.5, 20.5], [85.0, 20.0], [84.5, 19.5], [84.0, 18.5],
+      [83.5, 18.0], [83.0, 17.5], [82.5, 17.0], [82.0, 16.5],
+      [81.5, 16.0], [81.0, 15.5], [80.5, 15.0],
+      // Back to starting coordinate to close polygon
+      [68.1, 23.6]
+    ]]
+  }
 }
 
-// Fraud flow scenarios
-const FRAUD_FLOWS = [
-  { from: 'Mumbai', to: 'Delhi', amount: 4700000, type: 'CIRCULAR', delay: 0 },
-  { from: 'Delhi', to: 'Kolkata', amount: 3200000, type: 'LAYERING', delay: 800 },
-  { from: 'Kolkata', to: 'Chennai', amount: 2800000, type: 'LAYERING', delay: 1600 },
-  { from: 'Chennai', to: 'Hyderabad', amount: 1900000, type: 'STRUCTURING', delay: 2400 },
-  { from: 'Hyderabad', to: 'Mumbai', amount: 4500000, type: 'CIRCULAR', delay: 3200 },
-  { from: 'Bengaluru', to: 'Pune', amount: 2100000, type: 'ROUND_TRIP', delay: 1000 },
-  { from: 'Pune', to: 'Ahmedabad', amount: 1800000, type: 'LAYERING', delay: 2000 },
-  { from: 'Ahmedabad', to: 'Jaipur', amount: 1500000, type: 'STRUCTURING', delay: 3000 },
-  { from: 'Jaipur', to: 'Lucknow', amount: 900000, type: 'STRUCTURING', delay: 3800 },
+const CITIES = [
+  { id:'MUM', name:'Mumbai',    lat:19.076, lng:72.877, risk:92, amount:4700000,  color:'#ff2a4a' },
+  { id:'DEL', name:'Delhi',     lat:28.613, lng:77.209, risk:71, amount:3200000,  color:'#ffaa00' },
+  { id:'BLR', name:'Bengaluru', lat:12.971, lng:77.594, risk:48, amount:1900000,  color:'#00aaff' },
+  { id:'HYD', name:'Hyderabad', lat:17.385, lng:78.486, risk:62, amount:2800000,  color:'#ffaa00' },
+  { id:'CHE', name:'Chennai',   lat:13.083, lng:80.270, risk:44, amount:1500000,  color:'#00aaff' },
+  { id:'KOL', name:'Kolkata',   lat:22.572, lng:88.363, risk:38, amount:1200000,  color:'#00aaff' },
+  { id:'AHM', name:'Ahmedabad', lat:23.022, lng:72.571, risk:55, amount:2100000,  color:'#ffaa00' },
+  { id:'JAI', name:'Jaipur',    lat:26.912, lng:75.787, risk:49, amount:1700000,  color:'#00aaff' },
+  { id:'PUN', name:'Pune',      lat:18.520, lng:73.856, risk:58, amount:2300000,  color:'#ffaa00' },
+  { id:'LKO', name:'Lucknow',   lat:26.846, lng:80.946, risk:33, amount:980000,   color:'#00aaff' },
 ]
 
-const TYPE_COLOR = {
-  CIRCULAR: '#ff2a4a',
-  LAYERING: '#ffaa00',
-  STRUCTURING: '#b44aff',
-  ROUND_TRIP: '#00e5ff',
-}
-
-// Simplified India outline paths (major regions)
-const INDIA_PATH = `
-M 295 60 L 320 55 L 355 70 L 390 65 L 420 80 L 460 75 L 490 90 L 510 110
-L 530 130 L 545 160 L 550 190 L 540 220 L 555 240 L 560 270 L 545 300
-L 530 320 L 520 350 L 530 380 L 520 410 L 500 430 L 490 460 L 470 480
-L 450 510 L 430 530 L 410 560 L 390 590 L 370 620 L 350 650 L 340 680
-L 330 710 L 320 730 L 310 750 L 295 760 L 280 750 L 265 730 L 250 700
-L 240 670 L 230 640 L 215 610 L 200 580 L 185 555 L 170 530 L 155 510
-L 145 480 L 140 450 L 130 420 L 125 390 L 130 360 L 140 330 L 135 300
-L 140 270 L 150 245 L 160 220 L 155 195 L 160 170 L 175 150 L 185 130
-L 195 110 L 210 95 L 230 80 L 255 68 L 280 62 L 295 60 Z
-M 490 90 L 510 85 L 535 95 L 555 115 L 565 140 L 560 165 L 550 190 Z
-M 310 750 L 325 770 L 315 790 L 300 800 L 285 790 L 275 770 L 280 750 Z
-`
+const FLOWS = [
+  { from:'MUM', to:'DEL',  amount:4700000, suspicious:true  },
+  { from:'DEL', to:'AHM',  amount:3200000, suspicious:true  },
+  { from:'AHM', to:'MUM',  amount:3100000, suspicious:true  },
+  { from:'MUM', to:'HYD',  amount:2800000, suspicious:false },
+  { from:'HYD', to:'BLR',  amount:1900000, suspicious:false },
+  { from:'KOL', to:'DEL',  amount:1200000, suspicious:false },
+  { from:'JAI', to:'LKO',  amount:980000,  suspicious:false },
+]
 
 export default function IndiaMap() {
-  const [activeFlows, setActiveFlows] = useState([])
-  const [cityRisks, setCityRisks] = useState({})
-  const [selectedCity, setSelectedCity] = useState(null)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [totalFlowed, setTotalFlowed] = useState(0)
-  const [flowLog, setFlowLog] = useState([])
-  const animRef = useRef(null)
-  const particlesRef = useRef([])
-  const canvasRef = useRef(null)
+  const svgRef    = useRef(null)
+  const [tooltip, setTooltip] = useState(null)
+  const [stats,   setStats]   = useState({ totalFlow: 0, suspiciousFlow: 0, hotCity: '' })
 
   useEffect(() => {
-    // Init city risks
-    const risks = {}
-    Object.keys(CITIES).forEach(city => {
-      risks[city] = { risk: Math.floor(Math.random() * 40) + 10, txnCount: Math.floor(Math.random() * 50) + 5, amount: 0 }
-    })
-    // Boost fraud cities
-    ;['Mumbai', 'Delhi', 'Hyderabad', 'Chennai', 'Kolkata'].forEach(c => {
-      risks[c].risk = Math.floor(Math.random() * 30) + 65
-      risks[c].amount = Math.floor(Math.random() * 5000000) + 1000000
-    })
-    setCityRisks(risks)
+    const totalFlow      = FLOWS.reduce((s,f) => s + f.amount, 0)
+    const suspiciousFlow = FLOWS.filter(f => f.suspicious).reduce((s,f) => s + f.amount, 0)
+    const hotCity        = CITIES.reduce((a,b) => a.risk > b.risk ? a : b).name
+    setStats({ totalFlow, suspiciousFlow, hotCity })
   }, [])
 
-  const startAnimation = () => {
-    setIsPlaying(true)
-    setActiveFlows([])
-    setFlowLog([])
-    setTotalFlowed(0)
+  useEffect(() => {
+    if (!svgRef.current) return
 
-    FRAUD_FLOWS.forEach((flow, i) => {
-      setTimeout(() => {
-        setActiveFlows(prev => [...prev, { ...flow, id: `${flow.from}-${flow.to}-${Date.now()}`, progress: 0 }])
-        setFlowLog(prev => [{
-          time: new Date().toLocaleTimeString('en-IN', { hour12: false }),
-          from: flow.from,
-          to: flow.to,
-          amount: flow.amount,
-          type: flow.type
-        }, ...prev].slice(0, 12))
-        setTotalFlowed(prev => prev + flow.amount)
-        setCityRisks(prev => ({
-          ...prev,
-          [flow.from]: { ...prev[flow.from], risk: Math.min(98, (prev[flow.from]?.risk || 0) + 8) },
-          [flow.to]: { ...prev[flow.to], risk: Math.min(98, (prev[flow.to]?.risk || 0) + 12) },
-        }))
-      }, flow.delay)
+    const W = 560, H = 580
+    d3.select(svgRef.current).selectAll('*').remove()
+
+    const svg = d3.select(svgRef.current)
+      .attr('width',  '100%')
+      .attr('height', '100%')
+      .attr('viewBox', `0 0 ${W} ${H}`)
+
+    // ── D3 projection — real Mercator, fitted to India ──
+    const projection = d3.geoMercator()
+      .center([82, 22])       // center of India
+      .scale(1050)            // zoom level
+      .translate([W/2, H/2])
+
+    const path = d3.geoPath().projection(projection)
+
+    // ── Grid lines ──
+    const gridG = svg.append('g').attr('opacity', 0.06)
+    for (let x = 0; x < W; x += 40)
+      gridG.append('line').attr('x1',x).attr('y1',0).attr('x2',x).attr('y2',H).attr('stroke','#00aaff').attr('stroke-width',0.5)
+    for (let y = 0; y < H; y += 40)
+      gridG.append('line').attr('x1',0).attr('y1',y).attr('x2',W).attr('y2',y).attr('stroke','#00aaff').attr('stroke-width',0.5)
+
+    // ── India border (real GeoJSON path) ──
+    const mapG = svg.append('g')
+
+    // Glow filter
+    const defs = svg.append('defs')
+    const filter = defs.append('filter').attr('id','glow').attr('x','-20%').attr('y','-20%').attr('width','140%').attr('height','140%')
+    filter.append('feGaussianBlur').attr('stdDeviation','3').attr('result','coloredBlur')
+    const merge = filter.append('feMerge')
+    merge.append('feMergeNode').attr('in','coloredBlur')
+    merge.append('feMergeNode').attr('in','SourceGraphic')
+
+    // Outer glow shape
+    mapG.append('path')
+      .datum(INDIA_GEOJSON)
+      .attr('d', path)
+      .attr('fill', 'none')
+      .attr('stroke', 'rgba(0,170,255,0.15)')
+      .attr('stroke-width', 12)
+      .attr('filter', 'url(#glow)')
+
+    // Main border
+    mapG.append('path')
+      .datum(INDIA_GEOJSON)
+      .attr('d', path)
+      .attr('fill', 'rgba(8,20,48,0.85)')
+      .attr('stroke', 'rgba(0,170,255,0.55)')
+      .attr('stroke-width', 1.5)
+
+    // Subtle interior fill gradient
+    const grad = defs.append('linearGradient').attr('id','mapFill').attr('x1','0').attr('y1','0').attr('x2','0').attr('y2','1')
+    grad.append('stop').attr('offset','0%').attr('stop-color','rgba(0,100,200,0.08)')
+    grad.append('stop').attr('offset','100%').attr('stop-color','rgba(0,30,80,0.04)')
+
+    mapG.append('path')
+      .datum(INDIA_GEOJSON)
+      .attr('d', path)
+      .attr('fill', 'url(#mapFill)')
+      .attr('stroke', 'none')
+
+    // ── City positions via projection ──
+    const cityPos = {}
+    CITIES.forEach(c => {
+      const [x, y] = projection([c.lng, c.lat])
+      cityPos[c.id] = { x, y }
     })
 
-    setTimeout(() => setIsPlaying(false), 6000)
-  }
+    // ── Flow arcs ──
+    const flowG = svg.append('g')
+    FLOWS.forEach((flow, fi) => {
+      const s = cityPos[flow.from]
+      const e = cityPos[flow.to]
+      if (!s || !e) return
 
-  const getRiskColor = (risk) => {
-    if (risk >= 70) return '#ff2a4a'
-    if (risk >= 45) return '#ffaa00'
-    return '#00aaff'
-  }
+      const mx = (s.x + e.x) / 2
+      const my = (s.y + e.y) / 2 - 60  // arc height
 
-  const getCityTotal = (city) => {
-    const flows = FRAUD_FLOWS.filter(f => f.from === city || f.to === city)
-    return flows.reduce((s, f) => s + f.amount, 0)
-  }
+      const arcPath = `M ${s.x},${s.y} Q ${mx},${my} ${e.x},${e.y}`
+
+      // Shadow arc
+      flowG.append('path')
+        .attr('d', arcPath)
+        .attr('fill', 'none')
+        .attr('stroke', flow.suspicious ? 'rgba(255,42,74,0.12)' : 'rgba(0,170,255,0.08)')
+        .attr('stroke-width', 4)
+
+      // Main arc
+      const arcEl = flowG.append('path')
+        .attr('d', arcPath)
+        .attr('fill', 'none')
+        .attr('stroke', flow.suspicious ? 'rgba(255,42,74,0.7)' : 'rgba(0,170,255,0.45)')
+        .attr('stroke-width', flow.suspicious ? 2 : 1.2)
+        .attr('stroke-dasharray', flow.suspicious ? '6 3' : '4 4')
+
+      // Dash animation
+      const totalLen = 300
+      arcEl
+        .attr('stroke-dasharray', `${totalLen} ${totalLen}`)
+        .attr('stroke-dashoffset', totalLen)
+        .transition().duration(1200).delay(fi * 180).ease(d3.easeLinear)
+        .attr('stroke-dashoffset', 0)
+        .on('end', function repeat() {
+          d3.select(this)
+            .attr('stroke-dashoffset', totalLen)
+            .transition().duration(1200).delay(fi * 50).ease(d3.easeLinear)
+            .attr('stroke-dashoffset', 0)
+            .on('end', repeat)
+        })
+
+      // Amount label on arc midpoint
+      const lx = (s.x + e.x) / 2 + (Math.random() - 0.5) * 12
+      const ly = my + 22
+      flowG.append('text')
+        .attr('x', lx).attr('y', ly)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', 9)
+        .attr('font-family', 'JetBrains Mono, monospace')
+        .attr('fill', flow.suspicious ? '#ff2a4a' : '#5a7fa8')
+        .attr('opacity', 0.85)
+        .text(`₹${(flow.amount/100000).toFixed(0)}L`)
+
+      // Moving dot along arc
+      const movDot = flowG.append('circle')
+        .attr('r', flow.suspicious ? 4 : 3)
+        .attr('fill', flow.suspicious ? '#ff2a4a' : '#00aaff')
+        .attr('opacity', 0.9)
+
+      const animateDot = () => {
+        movDot
+          .attr('cx', s.x).attr('cy', s.y)
+          .transition()
+          .duration(1800 + fi * 120)
+          .delay(fi * 200)
+          .ease(d3.easeCubicInOut)
+          .attrTween('cx', () => {
+            return t => {
+              const pt = arcEl.node().getPointAtLength(t * arcEl.node().getTotalLength())
+              return pt ? pt.x : s.x
+            }
+          })
+          .attrTween('cy', () => {
+            return t => {
+              const pt = arcEl.node().getPointAtLength(t * arcEl.node().getTotalLength())
+              return pt ? pt.y : s.y
+            }
+          })
+          .on('end', () => setTimeout(animateDot, 400 + fi * 60))
+      }
+      setTimeout(animateDot, fi * 300)
+    })
+
+    // ── City nodes ──
+    const cityG = svg.append('g')
+    CITIES.forEach(c => {
+      const { x, y } = cityPos[c.id]
+      const r = Math.max(6, Math.min(14, c.risk / 9))
+      const g = cityG.append('g')
+        .attr('cursor', 'pointer')
+        .on('mouseenter', (evt) => {
+          setTooltip({
+            x: evt.offsetX, y: evt.offsetY,
+            name: c.name, risk: c.risk,
+            amount: c.amount, color: c.color,
+          })
+        })
+        .on('mouseleave', () => setTooltip(null))
+
+      // Outer pulse ring — only for high risk
+      if (c.risk > 60) {
+        const pulse = g.append('circle')
+          .attr('cx', x).attr('cy', y).attr('r', r + 2)
+          .attr('fill', 'none')
+          .attr('stroke', c.color)
+          .attr('stroke-width', 1.2)
+          .attr('opacity', 0.6)
+
+        const animatePulse = () => {
+          pulse.attr('r', r + 2).attr('opacity', 0.6)
+            .transition().duration(1400).ease(d3.easeLinear)
+            .attr('r', r + 14).attr('opacity', 0)
+            .on('end', animatePulse)
+        }
+        animatePulse()
+
+        const pulse2 = g.append('circle')
+          .attr('cx', x).attr('cy', y).attr('r', r + 2)
+          .attr('fill', 'none').attr('stroke', c.color)
+          .attr('stroke-width', 0.7).attr('opacity', 0.4)
+        const animatePulse2 = () => {
+          pulse2.attr('r', r + 2).attr('opacity', 0.4)
+            .transition().duration(1400).delay(500).ease(d3.easeLinear)
+            .attr('r', r + 18).attr('opacity', 0)
+            .on('end', animatePulse2)
+        }
+        animatePulse2()
+      }
+
+      // City circle
+      g.append('circle')
+        .attr('cx', x).attr('cy', y).attr('r', r)
+        .attr('fill', c.color)
+        .attr('opacity', 0.9)
+        .attr('stroke', '#040810')
+        .attr('stroke-width', 1.5)
+
+      // Inner dot
+      g.append('circle')
+        .attr('cx', x).attr('cy', y).attr('r', r * 0.38)
+        .attr('fill', '#040810').attr('opacity', 0.7)
+
+      // City name label
+      g.append('text')
+        .attr('x', x + r + 5).attr('y', y + 4)
+        .attr('font-size', 10)
+        .attr('font-family', 'JetBrains Mono, monospace')
+        .attr('font-weight', '600')
+        .attr('fill', c.risk > 70 ? '#ff6b6b' : c.risk > 50 ? '#ffcc44' : '#8aafd4')
+        .text(c.name)
+    })
+
+  }, [])
+
+  const fmt = (n) => `₹${(n / 100000).toFixed(1)}L`
 
   return (
-    <div style={{ height: 'calc(100vh - 72px)', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ maxWidth: 1400 }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20, paddingBottom:16, borderBottom:'1px solid #0f2040' }}>
         <div>
-          <div style={{ fontSize: '9px', color: '#5a7fa8', letterSpacing: '0.2em', marginBottom: '4px' }}>GEOGRAPHIC INTELLIGENCE</div>
-          <h1 style={{ fontSize: '20px', fontWeight: '700', fontFamily: 'Rajdhani, sans-serif', letterSpacing: '0.05em' }}>
-            INDIA MONEY FLOW MAP
-          </h1>
+          <div style={{ fontSize:9, color:'#5a7fa8', letterSpacing:'0.2em', marginBottom:4 }}>GEOGRAPHIC INTELLIGENCE</div>
+          <h1 style={{ fontSize:22, fontWeight:700, color:'#e8f4ff', fontFamily:'Rajdhani, sans-serif' }}>INDIA MONEY FLOW MAP</h1>
         </div>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <div style={{ padding: '8px 16px', background: '#080f1e', border: '1px solid #0f2040', borderRadius: '3px', textAlign: 'center' }}>
-            <div style={{ fontSize: '18px', fontWeight: '700', fontFamily: 'JetBrains Mono', color: '#ff2a4a' }}>
-              ₹{(totalFlowed / 100000).toFixed(0)}L
+        <div style={{ display:'flex', gap:8 }}>
+          {[
+            { label:'TOTAL FLOW',      value:fmt(stats.totalFlow),      color:'#00aaff' },
+            { label:'SUSPICIOUS',      value:fmt(stats.suspiciousFlow), color:'#ff2a4a' },
+            { label:'HOT CITY',        value:stats.hotCity,             color:'#ffaa00' },
+          ].map(s => (
+            <div key={s.label} style={{ padding:'8px 14px', background:'#080f1e', border:'1px solid #0f2040', borderRadius:3, textAlign:'center' }}>
+              <div style={{ fontSize:8, color:'#5a7fa8', letterSpacing:'0.1em', marginBottom:3 }}>{s.label}</div>
+              <div style={{ fontSize:14, fontWeight:700, fontFamily:'JetBrains Mono', color:s.color }}>{s.value}</div>
             </div>
-            <div style={{ fontSize: '9px', color: '#5a7fa8' }}>TOTAL FLOWED</div>
-          </div>
-          <button onClick={startAnimation} disabled={isPlaying} style={{
-            padding: '10px 24px', borderRadius: '3px', fontSize: '11px', fontWeight: '700',
-            background: isPlaying ? 'rgba(255,42,74,0.05)' : 'rgba(255,42,74,0.15)',
-            border: '1px solid rgba(255,42,74,0.4)', color: '#ff2a4a', letterSpacing: '0.1em'
-          }}>
-            {isPlaying ? '◌ ANIMATING...' : '▶ SIMULATE FLOW'}
-          </button>
+          ))}
         </div>
       </div>
 
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 300px', gap: '12px', minHeight: 0 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 280px', gap:16 }}>
 
-        {/* MAP */}
-        <div className="card" style={{ padding: 0, overflow: 'hidden', position: 'relative', background: '#040d1a' }}>
+        {/* Map */}
+        <div style={{ background:'#040d1f', border:'1px solid #0f2040', borderRadius:4, overflow:'hidden', position:'relative', minHeight:580 }}>
+          <div style={{ position:'absolute', top:12, left:12, fontSize:9, color:'#5a7fa8', letterSpacing:'0.15em', zIndex:2 }}>
+            🇮🇳 INDIA — FINANCIAL CRIME HEATMAP
+          </div>
 
-          {/* Grid background */}
-          <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.15 }}>
-            <defs>
-              <pattern id="mapgrid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#00aaff" strokeWidth="0.3" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#mapgrid)" />
-          </svg>
+          <svg ref={svgRef} style={{ width:'100%', height:580 }} />
 
-          <svg viewBox="0 0 800 900" style={{ width: '100%', height: '100%', position: 'relative' }}
-            preserveAspectRatio="xMidYMid meet">
-
-            {/* India shape */}
-            <path d={INDIA_PATH}
-              fill="rgba(0,170,255,0.04)"
-              stroke="rgba(0,170,255,0.2)"
-              strokeWidth="1.5"
-              strokeLinejoin="round"
-            />
-
-            {/* Flow lines with animation */}
-            {activeFlows.map(flow => {
-              const from = CITIES[flow.from]
-              const to = CITIES[flow.to]
-              if (!from || !to) return null
-              const color = TYPE_COLOR[flow.type] || '#00aaff'
-              const id = `flow-${flow.id}`
-
-              return (
-                <g key={flow.id}>
-                  {/* Glowing line */}
-                  <line
-                    x1={from.x} y1={from.y} x2={to.x} y2={to.y}
-                    stroke={color} strokeWidth="2" strokeOpacity="0.6"
-                    strokeDasharray="8,4"
-                    style={{ animation: 'none' }}
-                  />
-                  {/* Animated particle */}
-                  <circle r="5" fill={color} opacity="0.9"
-                    filter={`drop-shadow(0 0 6px ${color})`}>
-                    <animateMotion dur="1.5s" repeatCount="3" fill="freeze">
-                      <mpath href={`#path-${flow.id}`} />
-                    </animateMotion>
-                  </circle>
-                  <path id={`path-${flow.id}`}
-                    d={`M ${from.x} ${from.y} Q ${(from.x + to.x) / 2} ${Math.min(from.y, to.y) - 60} ${to.x} ${to.y}`}
-                    fill="none" />
-                  {/* Curved arc */}
-                  <path
-                    d={`M ${from.x} ${from.y} Q ${(from.x + to.x) / 2} ${Math.min(from.y, to.y) - 60} ${to.x} ${to.y}`}
-                    fill="none" stroke={color} strokeWidth="2.5" strokeOpacity="0.5"
-                    strokeDasharray="6,3"
-                  >
-                    <animate attributeName="stroke-dashoffset" from="0" to="-100" dur="1s" repeatCount="indefinite" />
-                  </path>
-                  {/* Amount label */}
-                  <text
-                    x={(from.x + to.x) / 2}
-                    y={Math.min(from.y, to.y) - 68}
-                    textAnchor="middle" fontSize="9"
-                    fill={color} fontFamily="JetBrains Mono"
-                    opacity="0.9"
-                  >
-                    ₹{(flow.amount / 100000).toFixed(0)}L
-                  </text>
-                </g>
-              )
-            })}
-
-            {/* City nodes */}
-            {Object.entries(CITIES).map(([city, pos]) => {
-              const risk = cityRisks[city]?.risk || 20
-              const color = getRiskColor(risk)
-              const isSelected = selectedCity === city
-              const hasFlow = activeFlows.some(f => f.from === city || f.to === city)
-
-              return (
-                <g key={city} style={{ cursor: 'pointer' }}
-                  onClick={() => setSelectedCity(city === selectedCity ? null : city)}>
-
-                  {/* Pulse ring for high risk */}
-                  {(risk >= 70 || hasFlow) && (
-                    <circle cx={pos.x} cy={pos.y} r="16" fill="none"
-                      stroke={color} strokeWidth="1" opacity="0.4"
-                      style={{ animation: 'ping 2s infinite' }}
-                    />
-                  )}
-
-                  {/* Node */}
-                  <circle
-                    cx={pos.x} cy={pos.y}
-                    r={isSelected ? 10 : risk >= 70 ? 8 : 6}
-                    fill={`${color}22`}
-                    stroke={color}
-                    strokeWidth={isSelected ? 2.5 : 1.5}
-                    filter={risk >= 70 ? `drop-shadow(0 0 8px ${color})` : undefined}
-                  />
-
-                  {/* Inner dot */}
-                  <circle cx={pos.x} cy={pos.y} r="3" fill={color} opacity="0.9" />
-
-                  {/* City label */}
-                  <text x={pos.x} y={pos.y - 14}
-                    textAnchor="middle" fontSize="9"
-                    fill={risk >= 70 ? color : '#5a7fa8'}
-                    fontFamily="JetBrains Mono"
-                    fontWeight={risk >= 70 ? '700' : '400'}
-                  >
-                    {city}
-                  </text>
-
-                  {/* Risk score */}
-                  <text x={pos.x} y={pos.y + 22}
-                    textAnchor="middle" fontSize="8"
-                    fill={color} fontFamily="JetBrains Mono"
-                  >
-                    {risk}
-                  </text>
-                </g>
-              )
-            })}
-          </svg>
+          {/* Tooltip */}
+          {tooltip && (
+            <div style={{ position:'absolute', left:tooltip.x + 12, top:tooltip.y - 10, background:'#080f1e', border:`1px solid ${tooltip.color}`, borderRadius:4, padding:'8px 12px', pointerEvents:'none', zIndex:10, minWidth:130 }}>
+              <div style={{ fontSize:11, fontWeight:700, color:tooltip.color, marginBottom:4 }}>{tooltip.name}</div>
+              <div style={{ fontSize:9, color:'#5a7fa8', marginBottom:2 }}>
+                RISK: <span style={{ color: tooltip.risk > 70 ? '#ff2a4a' : tooltip.risk > 50 ? '#ffaa00' : '#00aaff', fontWeight:700 }}>{tooltip.risk}/100</span>
+              </div>
+              <div style={{ fontSize:9, color:'#5a7fa8' }}>
+                FLOW: <span style={{ color:'#8aafd4', fontWeight:700 }}>{fmt(tooltip.amount)}</span>
+              </div>
+            </div>
+          )}
 
           {/* Legend */}
-          <div style={{ position: 'absolute', bottom: '12px', left: '12px', display: 'flex', gap: '12px' }}>
-            {Object.entries(TYPE_COLOR).map(([type, color]) => (
-              <div key={type} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <div style={{ width: '20px', height: '2px', background: color, boxShadow: `0 0 4px ${color}` }} />
-                <span style={{ fontSize: '8px', color: '#5a7fa8', fontFamily: 'JetBrains Mono' }}>{type}</span>
+          <div style={{ position:'absolute', bottom:14, left:14, background:'rgba(4,8,16,0.85)', border:'1px solid #0f2040', borderRadius:3, padding:'8px 10px' }}>
+            <div style={{ fontSize:8, color:'#5a7fa8', marginBottom:6, letterSpacing:'0.1em' }}>LEGEND</div>
+            {[
+              { color:'#ff2a4a', label:'High risk city (>70)' },
+              { color:'#ffaa00', label:'Medium risk (50–70)' },
+              { color:'#00aaff', label:'Low risk (<50)' },
+              { color:'#ff2a4a', label:'Suspicious flow', dashed:true },
+              { color:'#00aaff', label:'Normal flow', dashed:true },
+            ].map((l,i) => (
+              <div key={i} style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
+                {l.dashed
+                  ? <div style={{ width:18, height:1, borderTop:`2px dashed ${l.color}`, opacity:0.8 }} />
+                  : <div style={{ width:10, height:10, borderRadius:'50%', background:l.color, flexShrink:0 }} />
+                }
+                <span style={{ fontSize:9, color:'#8aafd4' }}>{l.label}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Right panel */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto' }}>
+        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
 
-          {/* Selected city detail */}
-          {selectedCity && cityRisks[selectedCity] && (
-            <div className="card" style={{
-              borderLeft: `2px solid ${getRiskColor(cityRisks[selectedCity].risk)}`,
-              animation: 'fadeUp 0.3s ease'
-            }}>
-              <div style={{ fontSize: '9px', color: '#5a7fa8', letterSpacing: '0.15em', marginBottom: '6px' }}>CITY PROFILE</div>
-              <div style={{ fontSize: '16px', fontWeight: '700', fontFamily: 'Rajdhani, sans-serif', marginBottom: '10px' }}>
-                {selectedCity}
-              </div>
-              {[
-                { label: 'RISK SCORE', value: `${cityRisks[selectedCity].risk}/100`, color: getRiskColor(cityRisks[selectedCity].risk) },
-                { label: 'STATE', value: CITIES[selectedCity].state },
-                { label: 'FLAGGED FLOWS', value: FRAUD_FLOWS.filter(f => f.from === selectedCity || f.to === selectedCity).length },
-                { label: 'TOTAL EXPOSURE', value: `₹${(getCityTotal(selectedCity) / 100000).toFixed(1)}L` },
-              ].map(({ label, value, color }) => (
-                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #0a1828' }}>
-                  <span style={{ fontSize: '9px', color: '#5a7fa8' }}>{label}</span>
-                  <span style={{ fontSize: '11px', fontWeight: '700', fontFamily: 'JetBrains Mono', color: color || '#e8f4ff' }}>{value}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Flow log */}
-          <div className="card" style={{ flex: 1 }}>
-            <div style={{ fontSize: '9px', color: '#5a7fa8', letterSpacing: '0.15em', marginBottom: '10px', display: 'flex', justifyContent: 'space-between' }}>
-              <span>LIVE FLOW LOG</span>
-              {isPlaying && <span style={{ color: '#ff2a4a', animation: 'blink 0.8s infinite' }}>● LIVE</span>}
-            </div>
-            {flowLog.length === 0 ? (
-              <div style={{ color: '#2a3f5f', fontSize: '10px', textAlign: 'center', padding: '20px' }}>
-                PRESS SIMULATE TO START
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {flowLog.map((log, i) => (
-                  <div key={i} style={{
-                    padding: '8px', borderRadius: '3px',
-                    background: 'rgba(255,42,74,0.04)',
-                    border: '1px solid rgba(255,42,74,0.1)',
-                    animation: 'fadeUp 0.3s ease'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                      <span style={{ fontSize: '8px', color: '#5a7fa8', fontFamily: 'JetBrains Mono' }}>{log.time}</span>
-                      <span style={{ fontSize: '8px', fontWeight: '700', color: TYPE_COLOR[log.type] || '#00aaff' }}>{log.type}</span>
-                    </div>
-                    <div style={{ fontSize: '10px', color: '#8aafd4', fontFamily: 'JetBrains Mono' }}>
-                      <span style={{ color: '#ff2a4a' }}>{log.from}</span>
-                      <span style={{ color: '#2a3f5f' }}> ──▶ </span>
-                      <span style={{ color: '#ffaa00' }}>{log.to}</span>
-                    </div>
-                    <div style={{ fontSize: '10px', fontWeight: '700', color: '#e8f4ff', marginTop: '2px' }}>
-                      ₹{log.amount.toLocaleString('en-IN')}
-                    </div>
+          {/* City risk table */}
+          <div style={{ background:'#080f1e', border:'1px solid #0f2040', borderRadius:4, padding:14 }}>
+            <div style={{ fontSize:9, color:'#5a7fa8', letterSpacing:'0.15em', marginBottom:12 }}>CITY RISK RANKINGS</div>
+            {[...CITIES].sort((a,b) => b.risk - a.risk).map((c,i) => (
+              <div key={c.id} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
+                <div style={{ width:16, fontSize:9, color:'#2a3f5f', fontFamily:'JetBrains Mono' }}>#{i+1}</div>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:11, fontWeight:600, color: c.risk > 70 ? '#ff2a4a' : c.risk > 50 ? '#ffaa00' : '#8aafd4', marginBottom:2 }}>
+                    {c.name}
                   </div>
-                ))}
+                  <div style={{ height:3, background:'#0f2040', borderRadius:2 }}>
+                    <div style={{ height:'100%', width:`${c.risk}%`, background: c.risk > 70 ? '#ff2a4a' : c.risk > 50 ? '#ffaa00' : '#00aaff', borderRadius:2 }} />
+                  </div>
+                </div>
+                <div style={{ fontSize:11, fontWeight:700, fontFamily:'JetBrains Mono', color: c.risk > 70 ? '#ff2a4a' : c.risk > 50 ? '#ffaa00' : '#00aaff', width:28, textAlign:'right' }}>
+                  {c.risk}
+                </div>
               </div>
-            )}
+            ))}
           </div>
 
-          {/* City risk leaderboard */}
-          <div className="card">
-            <div style={{ fontSize: '9px', color: '#5a7fa8', letterSpacing: '0.15em', marginBottom: '10px' }}>HIGHEST RISK CITIES</div>
-            {Object.entries(cityRisks)
-              .sort((a, b) => b[1].risk - a[1].risk)
-              .slice(0, 6)
-              .map(([city, data], i) => (
-                <div key={city} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '9px', color: '#2a3f5f', width: '12px' }}>#{i + 1}</span>
-                  <span style={{ fontSize: '10px', color: '#8aafd4', flex: 1, fontFamily: 'JetBrains Mono' }}>{city}</span>
-                  <div style={{ width: '60px', height: '4px', background: '#0a1828', borderRadius: '2px', overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%', borderRadius: '2px',
-                      width: `${data.risk}%`,
-                      background: getRiskColor(data.risk),
-                      boxShadow: `0 0 6px ${getRiskColor(data.risk)}`
-                    }} />
-                  </div>
-                  <span style={{ fontSize: '10px', fontWeight: '700', color: getRiskColor(data.risk), fontFamily: 'JetBrains Mono', width: '28px', textAlign: 'right' }}>
-                    {data.risk}
+          {/* Suspicious flows */}
+          <div style={{ background:'#080f1e', border:'1px solid rgba(255,42,74,0.25)', borderRadius:4, padding:14 }}>
+            <div style={{ fontSize:9, color:'#ff2a4a', letterSpacing:'0.15em', marginBottom:12 }}>🔴 SUSPICIOUS FLOWS</div>
+            {FLOWS.filter(f => f.suspicious).map((f, i) => (
+              <div key={i} style={{ padding:'8px 10px', background:'rgba(255,42,74,0.05)', border:'1px solid rgba(255,42,74,0.15)', borderRadius:3, marginBottom:6 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:2 }}>
+                  <span style={{ fontSize:11, fontFamily:'JetBrains Mono', color:'#ff2a4a' }}>
+                    {f.from} → {f.to}
+                  </span>
+                  <span style={{ fontSize:11, fontWeight:700, color:'#ffaa00', fontFamily:'JetBrains Mono' }}>
+                    {fmt(f.amount)}
                   </span>
                 </div>
-              ))}
+                <div style={{ fontSize:9, color:'#5a7fa8' }}>
+                  CIRCULAR LAYERING — FLAGGED
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Total stats */}
+          <div style={{ background:'#080f1e', border:'1px solid #0f2040', borderRadius:4, padding:14 }}>
+            <div style={{ fontSize:9, color:'#5a7fa8', letterSpacing:'0.15em', marginBottom:10 }}>FLOW STATISTICS</div>
+            {[
+              { label:'Total monitored', value:fmt(stats.totalFlow),       color:'#00aaff' },
+              { label:'Suspicious',      value:fmt(stats.suspiciousFlow),  color:'#ff2a4a' },
+              { label:'Clean flows',     value:fmt(stats.totalFlow - stats.suspiciousFlow), color:'#00e676' },
+              { label:'Suspicious %',    value:`${Math.round(stats.suspiciousFlow/stats.totalFlow*100)||0}%`, color:'#ffaa00' },
+            ].map(s => (
+              <div key={s.label} style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
+                <span style={{ fontSize:11, color:'#5a7fa8' }}>{s.label}</span>
+                <span style={{ fontSize:12, fontWeight:700, fontFamily:'JetBrains Mono', color:s.color }}>{s.value}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>

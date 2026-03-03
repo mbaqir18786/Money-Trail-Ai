@@ -7,7 +7,8 @@ import GraphView from './pages/GraphView'
 import Alerts from './pages/Alerts'
 import Investigation from './pages/Investigation'
 import IndiaMap from './pages/IndiaMap'
-import Intelligence from './pages/Intelligence'
+
+    import Intelligence from './pages/Intelligence.jsx'
 
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
           borderRadius: '4px',
         }
       }} />
+     
       <TickerTape />
       <div style={{ display: 'flex', minHeight: '100vh', paddingTop: '32px' }}>
         <Navbar />
@@ -33,8 +35,7 @@ export default function App() {
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/investigation" element={<Investigation />} />
             <Route path="/map" element={<IndiaMap />} />
-            <Route path="/intelligence" element={<Intelligence />} />
-
+              <Route path="/intelligence" element={<Intelligence />} />
           </Routes>
         </main>
       </div>
