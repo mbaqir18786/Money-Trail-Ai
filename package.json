@@ -1,10 +1,13 @@
 {
-  "name": "moneytrail-ai",
+  "name": "frontend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "homepage": "https://mbaqir18786.github.io/Money-Trail-Ai",
   "scripts": {
-    "dev": "concurrently -n frontend,backend,ml-service \"cd frontend && npm run dev\" \"cd backend && npm run dev\" \"cd ml-service && .venv\\\\Scripts\\\\uvicorn main:app --reload --port 8001\""
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "keywords": [],
   "author": "",
@@ -13,3 +16,4 @@
     "concurrently": "^9.2.1"
   }
 }
+
