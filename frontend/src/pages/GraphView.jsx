@@ -38,18 +38,23 @@ export default function GraphView() {
 
     const svg = d3.select(el).attr('width', width).attr('height', height)
 
-    // Background grid
     const defs = svg.append('defs')
 
     defs.append('pattern')
       .attr('id', 'grid').attr('width', 40).attr('height', 40)
       .attr('patternUnits', 'userSpaceOnUse')
       .append('path').attr('d', 'M 40 0 L 0 0 0 40')
-      .attr('fill', 'none').attr('stroke', '#0a1828').attr('stroke-width', '0.5')
+      .attr('fill', 'none').attr('stroke', '#e5e7eb').attr('stroke-width', '0.5')
 
-    svg.append('rect').attr('width', width).attr('height', height).attr('fill', 'url(#grid)')
+    svg.append('rect')
+      .attr('width', width)
+      .attr('height', height)
+      .attr('fill', '#f9fafb')
+      .attr('stroke', 'none')
+      .attr('opacity', 1)
+      .attr('pointer-events', 'all')
+      .attr('fill', 'url(#grid)')
 
-    // Arrow marker
     defs.append('marker').attr('id', 'arrow-normal')
       .attr('viewBox', '0 -4 8 8').attr('refX', 22).attr('refY', 0)
       .attr('markerWidth', 5).attr('markerHeight', 5).attr('orient', 'auto')
@@ -59,13 +64,6 @@ export default function GraphView() {
       .attr('viewBox', '0 -4 8 8').attr('refX', 22).attr('refY', 0)
       .attr('markerWidth', 5).attr('markerHeight', 5).attr('orient', 'auto')
       .append('path').attr('d', 'M0,-4L8,0L0,4').attr('fill', '#ff2a4a')
-
-    // Glow filter
-    const filter = defs.append('filter').attr('id', 'glow')
-    filter.append('feGaussianBlur').attr('stdDeviation', '3').attr('result', 'blur')
-    const merge = filter.append('feMerge')
-    merge.append('feMergeNode').attr('in', 'blur')
-    merge.append('feMergeNode').attr('in', 'SourceGraphic')
 
     const g = svg.append('g')
     svg.call(d3.zoom().scaleExtent([0.1, 4]).on('zoom', e => g.attr('transform', e.transform)))
@@ -85,14 +83,12 @@ export default function GraphView() {
       .force('center', d3.forceCenter(width / 2, height / 2))
       .force('collision', d3.forceCollide(25))
 
-    // Edges
     const link = g.append('g').selectAll('line').data(filteredEdges).join('line')
-      .attr('stroke', d => d.suspicious ? '#ff2a4a' : '#0f2040')
-      .attr('stroke-opacity', d => d.suspicious ? 0.7 : 0.4)
+      .attr('stroke', d => d.suspicious ? '#b91c1c' : '#9ca3af')
+      .attr('stroke-opacity', d => d.suspicious ? 0.75 : 0.6)
       .attr('stroke-width', d => d.suspicious ? 2 : 1)
       .attr('marker-end', d => d.suspicious ? 'url(#arrow-fraud)' : 'url(#arrow-normal)')
 
-    // Nodes
     const nodeGroup = g.append('g').selectAll('g').data(filteredNodes).join('g')
       .style('cursor', 'pointer')
       .on('click', (e, d) => setSelected(d))
@@ -102,7 +98,6 @@ export default function GraphView() {
         .on('end', (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null })
       )
 
-    // Outer ring for fraud nodes
     nodeGroup.filter(d => d.risk > 80).append('circle')
       .attr('r', 22).attr('fill', 'none')
       .attr('stroke', '#ff2a4a').attr('stroke-width', 1)
@@ -110,21 +105,20 @@ export default function GraphView() {
 
     nodeGroup.append('circle')
       .attr('r', d => d.risk > 80 ? 16 : d.risk > 50 ? 13 : 10)
-      .attr('fill', d => d.risk > 80 ? '#1a0508' : d.risk > 50 ? '#1a1005' : '#050d1a')
-      .attr('stroke', d => d.risk > 80 ? '#ff2a4a' : d.risk > 50 ? '#ffaa00' : '#00aaff')
+      .attr('fill', d => d.risk > 80 ? '#fee2e2' : d.risk > 50 ? '#fef3c7' : '#e0f2fe')
+      .attr('stroke', d => d.risk > 80 ? '#b91c1c' : d.risk > 50 ? '#d97706' : '#0b5ed7')
       .attr('stroke-width', d => d.risk > 80 ? 2 : 1)
-      .attr('filter', d => d.risk > 80 ? 'url(#glow)' : null)
 
     nodeGroup.append('text')
       .attr('text-anchor', 'middle').attr('dy', '0.3em')
       .attr('font-size', d => d.risk > 80 ? '8px' : '7px')
-      .attr('fill', d => d.risk > 80 ? '#ff2a4a' : d.risk > 50 ? '#ffaa00' : '#00aaff')
+      .attr('fill', d => d.risk > 80 ? '#b91c1c' : d.risk > 50 ? '#d97706' : '#1d4ed8')
       .attr('font-family', 'JetBrains Mono')
       .text(d => d.id.slice(-4))
 
     nodeGroup.append('text')
       .attr('text-anchor', 'middle').attr('dy', 30)
-      .attr('font-size', '8px').attr('fill', '#5a7fa8')
+      .attr('font-size', '8px').attr('fill', '#6b7280')
       .attr('font-family', 'JetBrains Mono')
       .text(d => d.name?.split(' ')[0]?.slice(0, 8) || '')
 
@@ -138,7 +132,6 @@ export default function GraphView() {
   return (
     <div style={{ height: 'calc(100vh - 72px)', display: 'flex', flexDirection: 'column' }}>
 
-      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <div>
           <div style={{ fontSize: '9px', color: '#5a7fa8', letterSpacing: '0.2em', marginBottom: '4px' }}>NETWORK ANALYSIS</div>
@@ -146,41 +139,76 @@ export default function GraphView() {
             TRANSACTION GRAPH
           </h1>
         </div>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          {/* Stats */}
-          {[
-            { label: 'NODES', value: stats.nodes, color: '#00aaff' },
-            { label: 'EDGES', value: stats.edges, color: '#00e5ff' },
-            { label: 'FRAUD', value: stats.fraud, color: '#ff2a4a' },
-          ].map(s => (
-            <div key={s.label} style={{
-              padding: '6px 12px', background: '#080f1e',
-              border: '1px solid #0f2040', borderRadius: '3px', textAlign: 'center'
-            }}>
-              <div style={{ fontSize: '16px', fontWeight: '700', fontFamily: 'JetBrains Mono', color: s.color }}>{s.value}</div>
-              <div style={{ fontSize: '8px', color: '#5a7fa8', letterSpacing: '0.1em' }}>{s.label}</div>
-            </div>
-          ))}
-          {/* Filters */}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {[
+              { label: 'NODES', value: stats.nodes, color: '#0b5ed7' },
+              { label: 'EDGES', value: stats.edges, color: '#0891b2' },
+              { label: 'FRAUD', value: stats.fraud, color: '#b91c1c' },
+            ].map(s => (
+              <div
+                key={s.label}
+                style={{
+                  padding: '6px 12px',
+                  background: '#ffffff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '6px',
+                  textAlign: 'center',
+                  boxShadow: '0 4px 10px rgba(15,23,42,0.05)',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    fontFamily: 'JetBrains Mono',
+                    color: s.color,
+                  }}
+                >
+                  {s.value}
+                </div>
+                <div
+                  style={{
+                    fontSize: '8px',
+                    color: '#6b7280',
+                    letterSpacing: '0.1em',
+                  }}
+                >
+                  {s.label}
+                </div>
+              </div>
+            ))}
           <div style={{ display: 'flex', gap: '4px', marginLeft: '8px' }}>
             {['all', 'fraud'].map(f => (
-              <button key={f} onClick={() => setFilter(f)} style={{
-                padding: '6px 12px', borderRadius: '3px', fontSize: '10px', fontWeight: '700',
-                letterSpacing: '0.1em',
-                background: filter === f ? 'rgba(0,170,255,0.15)' : 'transparent',
-                border: `1px solid ${filter === f ? 'rgba(0,170,255,0.4)' : '#0f2040'}`,
-                color: filter === f ? '#00aaff' : '#5a7fa8'
-              }}>
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '999px',
+                  fontSize: '10px',
+                  fontWeight: '700',
+                  letterSpacing: '0.1em',
+                  background: filter === f ? '#e0f2fe' : '#ffffff',
+                  border: `1px solid ${filter === f ? '#60a5fa' : '#d1d5db'}`,
+                  color: filter === f ? '#1d4ed8' : '#4b5563',
+                }}
+              >
                 {f.toUpperCase()}
               </button>
             ))}
           </div>
-          {/* Legend */}
           <div style={{ display: 'flex', gap: '12px', marginLeft: '8px' }}>
-            {[['#ff2a4a', 'HIGH RISK'], ['#ffaa00', 'SUSPICIOUS'], ['#00aaff', 'NORMAL']].map(([c, l]) => (
+            {[['#b91c1c', 'HIGH RISK'], ['#d97706', 'SUSPICIOUS'], ['#0b5ed7', 'NORMAL']].map(([c, l]) => (
               <div key={l} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: c, boxShadow: `0 0 6px ${c}` }} />
-                <span style={{ fontSize: '9px', color: '#5a7fa8', letterSpacing: '0.1em' }}>{l}</span>
+                <div
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: c,
+                  }}
+                />
+                <span style={{ fontSize: '9px', color: '#6b7280', letterSpacing: '0.1em' }}>{l}</span>
               </div>
             ))}
           </div>
@@ -188,64 +216,155 @@ export default function GraphView() {
       </div>
 
       <div style={{ flex: 1, display: 'flex', gap: '12px', minHeight: 0 }}>
-        {/* Graph */}
         <div className="card" style={{ flex: 1, padding: 0, overflow: 'hidden', position: 'relative' }}>
           {loading && (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ width: '30px', height: '30px', border: '2px solid #0f2040', borderTopColor: '#00aaff', borderRadius: '50%', animation: 'rotate 0.8s linear infinite' }} />
-              <span style={{ fontSize: '11px', color: '#5a7fa8', letterSpacing: '0.1em' }}>BUILDING NETWORK...</span>
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'column',
+                gap: '12px',
+                background: 'rgba(255,255,255,0.8)',
+              }}
+            >
+              <div
+                style={{
+                  width: '30px',
+                  height: '30px',
+                  border: '2px solid #e5e7eb',
+                  borderTopColor: '#0b5ed7',
+                  borderRadius: '50%',
+                  animation: 'rotate 0.8s linear infinite',
+                }}
+              />
+              <span style={{ fontSize: '11px', color: '#6b7280', letterSpacing: '0.1em' }}>
+                BUILDING NETWORK...
+              </span>
             </div>
           )}
           <svg ref={svgRef} style={{ width: '100%', height: '100%' }} />
-          <div style={{ position: 'absolute', bottom: '12px', left: '12px', fontSize: '9px', color: '#2a3f5f' }}>
+          <div style={{ position: 'absolute', bottom: '12px', left: '12px', fontSize: '9px', color: '#6b7280', background: 'rgba(255,255,255,0.9)', padding: '4px 8px', borderRadius: '999px', border: '1px solid #e5e7eb' }}>
             SCROLL TO ZOOM · DRAG TO PAN · CLICK NODE FOR DETAILS
           </div>
         </div>
 
-        {/* Detail panel */}
         {selected && (
-          <div className="card" style={{ width: '260px', animation: 'slideRight 0.3s ease', flexShrink: 0 }}>
+          <div
+            className="card"
+            style={{
+              width: '260px',
+              animation: 'slideRight 0.3s ease',
+              flexShrink: 0,
+              background: '#ffffff',
+              border: '1px solid #e5e7eb',
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div style={{ fontSize: '9px', color: '#5a7fa8', letterSpacing: '0.15em' }}>ACCOUNT DETAILS</div>
               <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', color: '#5a7fa8', fontSize: '16px', padding: 0 }}>×</button>
             </div>
 
-            <div style={{
-              padding: '10px', marginBottom: '16px', borderRadius: '3px',
-              background: selected.risk > 80 ? 'rgba(255,42,74,0.08)' : 'rgba(0,170,255,0.05)',
-              border: `1px solid ${selected.risk > 80 ? 'rgba(255,42,74,0.3)' : 'rgba(0,170,255,0.2)'}`,
-              textAlign: 'center'
-            }}>
+            <div
+              style={{
+                padding: '10px',
+                marginBottom: '16px',
+                borderRadius: '6px',
+                background: selected.risk > 80 ? '#fef2f2' : '#eff6ff',
+                border: `1px solid ${
+                  selected.risk > 80 ? '#fecaca' : '#bfdbfe'
+                }`,
+                textAlign: 'center',
+              }}
+            >
               <div style={{
-                fontSize: '36px', fontWeight: '700', fontFamily: 'JetBrains Mono',
-                color: selected.risk > 80 ? '#ff2a4a' : selected.risk > 50 ? '#ffaa00' : '#00e676'
-              }}>
+                fontSize: '36px',
+                fontWeight: '700',
+                fontFamily: 'JetBrains Mono',
+                color:
+                  selected.risk > 80
+                    ? '#b91c1c'
+                    : selected.risk > 50
+                    ? '#d97706'
+                    : '#15803d',
+              }}
+            >
                 {selected.risk}
               </div>
-              <div style={{ fontSize: '9px', color: '#5a7fa8', letterSpacing: '0.1em' }}>RISK SCORE / 100</div>
+              <div style={{ fontSize: '9px', color: '#6b7280', letterSpacing: '0.1em' }}>
+                RISK SCORE / 100
+              </div>
             </div>
 
-            {[
-              { label: 'ACCOUNT ID', value: selected.id },
-              { label: 'NAME', value: selected.name },
-              { label: 'TYPE', value: selected.type },
-              { label: 'LOCATION', value: selected.branch },
-              { label: 'TRANSACTIONS', value: selected.txnCount || '—' },
-              { label: 'TOTAL VOLUME', value: selected.totalAmount ? `₹${Math.round(selected.totalAmount).toLocaleString('en-IN')}` : '—' },
-              { label: 'STATUS', value: selected.risk > 80 ? '🔴 HIGH RISK' : selected.risk > 50 ? '🟡 SUSPICIOUS' : '🟢 CLEAR' },
-            ].map(({ label, value }) => (
-              <div key={label} style={{ marginBottom: '10px', paddingBottom: '10px', borderBottom: '1px solid #0a1828' }}>
-                <div style={{ fontSize: '9px', color: '#5a7fa8', letterSpacing: '0.1em', marginBottom: '2px' }}>{label}</div>
-                <div style={{ fontSize: '12px', color: '#e8f4ff', fontFamily: 'JetBrains Mono' }}>{value}</div>
-              </div>
-            ))}
+              {[
+                { label: 'ACCOUNT ID', value: selected.id },
+                { label: 'NAME', value: selected.name },
+                { label: 'TYPE', value: selected.type },
+                { label: 'LOCATION', value: selected.branch },
+                { label: 'TRANSACTIONS', value: selected.txnCount || '—' },
+                {
+                  label: 'TOTAL VOLUME',
+                  value: selected.totalAmount
+                    ? `₹${Math.round(selected.totalAmount).toLocaleString('en-IN')}`
+                    : '—',
+                },
+                {
+                  label: 'STATUS',
+                  value:
+                    selected.risk > 80
+                      ? '🔴 HIGH RISK'
+                      : selected.risk > 50
+                      ? '🟡 SUSPICIOUS'
+                      : '🟢 CLEAR',
+                },
+              ].map(({ label, value }) => (
+                <div
+                  key={label}
+                  style={{
+                    marginBottom: '10px',
+                    paddingBottom: '10px',
+                    borderBottom: '1px solid #e5e7eb',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: '9px',
+                      color: '#6b7280',
+                      letterSpacing: '0.1em',
+                      marginBottom: '2px',
+                    }}
+                  >
+                    {label}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      color: '#111827',
+                      fontFamily: 'JetBrains Mono',
+                    }}
+                  >
+                    {value}
+                  </div>
+                </div>
+              ))}
 
             {selected.risk > 80 && (
-              <button style={{
-                width: '100%', padding: '8px', borderRadius: '3px', fontSize: '10px', fontWeight: '700',
-                background: 'rgba(255,42,74,0.15)', border: '1px solid rgba(255,42,74,0.4)',
-                color: '#ff2a4a', letterSpacing: '0.1em', marginTop: '8px'
-              }}>
+              <button
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  borderRadius: '999px',
+                  fontSize: '10px',
+                  fontWeight: '700',
+                  background: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  color: '#b91c1c',
+                  letterSpacing: '0.1em',
+                  marginTop: '8px',
+                }}
+              >
                 ◈ FLAG FOR INVESTIGATION
               </button>
             )}

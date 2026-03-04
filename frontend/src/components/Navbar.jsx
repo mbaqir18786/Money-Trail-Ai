@@ -14,77 +14,97 @@ export default function Navbar() {
 
   return (
     <nav style={{
-      position: 'fixed', left: 0, top: '32px', bottom: 0,
+      position: 'fixed',
+      left: 0,
+      top: '32px',
+      bottom: 0,
       width: '200px',
-      background: '#040810',
-      borderRight: '1px solid #0f2040',
-      display: 'flex', flexDirection: 'column',
-      zIndex: 100
+      background: '#ffffff',
+      borderRight: '1px solid #e5e7eb',
+      display: 'flex',
+      flexDirection: 'column',
+      zIndex: 100,
+      boxShadow: '2px 0 12px rgba(15,23,42,0.06)',
     }}>
-      {/* Bank ID */}
-      <div style={{ padding: '20px 16px', borderBottom: '1px solid #0f2040' }}>
-        <div style={{ fontSize: '9px', color: '#5a7fa8', letterSpacing: '0.15em', marginBottom: '6px' }}>
+      <div style={{ padding: '20px 16px', borderBottom: '1px solid #e5e7eb' }}>
+        <div style={{ fontSize: '9px', color: '#6b7280', letterSpacing: '0.12em', marginBottom: '6px' }}>
           INSTITUTION
         </div>
-        <div style={{ fontSize: '13px', fontWeight: '700', color: '#e8f4ff', lineHeight: '1.3' }}>
+        <div style={{ fontSize: '13px', fontWeight: '700', color: '#111827', lineHeight: '1.3' }}>
           Union Bank<br />of India
         </div>
-        <div style={{ fontSize: '9px', color: '#5a7fa8', marginTop: '4px' }}>
+        <div style={{ fontSize: '9px', color: '#9ca3af', marginTop: '4px' }}>
           AML DIVISION · MUMBAI HQ
         </div>
         <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span style={{
             width: '6px', height: '6px', borderRadius: '50%',
-            background: '#00e676', flexShrink: 0,
-            boxShadow: '0 0 6px #00e676',
+            background: '#16a34a',
+            flexShrink: 0,
             animation: 'ping 2s infinite'
           }} />
-          <span style={{ fontSize: '9px', color: '#00e676', letterSpacing: '0.1em' }}>
+          <span style={{ fontSize: '9px', color: '#16a34a', letterSpacing: '0.1em', fontWeight: 600 }}>
             LIVE MONITORING
           </span>
         </div>
       </div>
 
-      {/* Navigation */}
       <div style={{ padding: '12px 10px', flex: 1 }}>
         {links.map(link => {
           const active = loc.pathname === link.path
           return (
-            <Link key={link.path} to={link.path} style={{
-              display: 'flex', alignItems: 'center', gap: '10px',
-              padding: '10px 10px', marginBottom: '4px',
-              borderRadius: '3px', textDecoration: 'none',
-              background: active ? 'rgba(0,170,255,0.08)' : 'transparent',
-              border: active ? '1px solid rgba(0,170,255,0.2)' : '1px solid transparent',
-              transition: 'all 0.15s',
-              position: 'relative'
-            }}>
+            <Link
+              key={link.path}
+              to={link.path}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 10px',
+                marginBottom: '4px',
+                borderRadius: '6px',
+                textDecoration: 'none',
+                background: active ? 'rgba(11,94,215,0.08)' : 'transparent',
+                border: active ? '1px solid rgba(11,94,215,0.35)' : '1px solid transparent',
+                transition: 'all 0.15s',
+                position: 'relative',
+              }}
+            >
               {active && (
-                <div style={{
-                  position: 'absolute', left: 0, top: '20%', bottom: '20%',
-                  width: '2px', background: '#00aaff',
-                  boxShadow: '0 0 8px #00aaff'
-                }} />
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: '18%',
+                    bottom: '18%',
+                    width: '3px',
+                    background: '#0b5ed7',
+                    borderRadius: '0 4px 4px 0',
+                  }}
+                />
               )}
-              <span style={{ fontSize: '14px', color: active ? '#00aaff' : '#5a7fa8' }}>
+              <span style={{ fontSize: '14px', color: active ? '#0b5ed7' : '#9ca3af' }}>
                 {link.icon}
               </span>
               <div>
-                <div style={{
-                  fontSize: '10px', fontWeight: '700', letterSpacing: '0.1em',
-                  color: active ? '#00aaff' : '#8aafd4'
-                }}>
+                <div
+                  style={{
+                    fontSize: '10px',
+                    fontWeight: '600',
+                    letterSpacing: '0.1em',
+                    color: active ? '#0b5ed7' : '#4b5563',
+                  }}
+                >
                   {link.label}
                 </div>
-                <div style={{ fontSize: '9px', color: '#5a7fa8' }}>{link.sub}</div>
+                <div style={{ fontSize: '9px', color: '#6b7280' }}>{link.sub}</div>
               </div>
             </Link>
           )
         })}
       </div>
 
-      {/* Status panel */}
-      <div style={{ padding: '12px 16px', borderTop: '1px solid #0f2040' }}>
+      <div style={{ padding: '12px 16px', borderTop: '1px solid #e5e7eb' }}>
         {[
           { label: 'BACKEND', status: 'OK', color: '#00e676' },
           { label: 'ML ENGINE', status: 'OK', color: '#00e676' },
@@ -94,11 +114,11 @@ export default function Navbar() {
             display: 'flex', justifyContent: 'space-between',
             marginBottom: '6px', fontSize: '9px'
           }}>
-            <span style={{ color: '#5a7fa8' }}>{s.label}</span>
-            <span style={{ color: s.color, fontWeight: '700' }}>● {s.status}</span>
+            <span style={{ color: '#6b7280' }}>{s.label}</span>
+            <span style={{ color: s.color, fontWeight: 600 }}>● {s.status}</span>
           </div>
         ))}
-        <div style={{ marginTop: '8px', fontSize: '9px', color: '#2a3f5f' }}>
+        <div style={{ marginTop: '8px', fontSize: '9px', color: '#9ca3af' }}>
           BUILD 2.0.1 · HACKATHON EDITION
         </div>
       </div>

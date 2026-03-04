@@ -1,12 +1,8 @@
-/* Reset - App.css handles component specific styles */
-/* Global styles are in index.css */
-
 #root {
   width: 100%;
   min-height: 100vh;
 }
 
-/* Graph animations */
 @keyframes pulse-green {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
@@ -37,7 +33,6 @@
   50% { filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.8)); }
 }
 
-/* Utility classes */
 .animate-fade-in {
   animation: fadeIn 0.3s ease forwards;
 }
@@ -58,35 +53,14 @@
   animation: glow-red 1.5s infinite;
 }
 
-/* Card hover effect */
 .card:hover {
-  background: #1a2234;
-  transition: background 0.2s ease;
-}
-
-/* Scrollbar for all scrollable areas */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #1F2937 #0A0E1A;
-}
-
-/* Button reset */
-button {
-  font-family: 'Inter', sans-serif;
-  transition: all 0.2s ease;
-}
-
-button:hover {
-  opacity: 0.85;
+  background: var(--bg-hover);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   transform: translateY(-1px);
 }
 
-button:active {
-  transform: translateY(0);
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-bright) #e5e7eb;
 }

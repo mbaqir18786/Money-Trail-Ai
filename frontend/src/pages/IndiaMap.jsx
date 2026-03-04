@@ -1,55 +1,42 @@
 import { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
 
-// Real simplified India GeoJSON polygon (hand-traced from actual coordinates)
 const INDIA_GEOJSON = {
   type: "Feature",
   geometry: {
     type: "Polygon",
     coordinates: [[
-      // Northwest — Pakistan border, Rann of Kutch
       [68.1, 23.6], [68.7, 22.8], [70.2, 22.3], [71.5, 22.0], [72.6, 21.6],
       [73.3, 21.2], [74.5, 20.7], [76.0, 20.4],
-      // South tip — Karnataka, Kerala, Tamil Nadu
       [77.5, 19.8], [78.3, 18.5], [79.0, 17.5], [79.5, 16.0],
       [80.0, 14.5], [80.3, 13.5], [80.3, 12.0], [79.8, 10.3],
       [79.0, 9.5],  [78.0, 8.5],  [77.5, 8.1],  [77.1, 8.4],
       [76.6, 9.0],  [76.3, 10.0], [76.0, 11.0], [75.5, 12.0],
       [75.0, 13.5], [74.5, 14.5], [74.0, 15.5], [73.6, 16.5],
       [73.2, 17.5], [73.0, 18.5], [72.8, 19.5], [72.5, 20.5],
-      // Mumbai coast going north
       [72.6, 21.5], [72.0, 22.5], [69.5, 22.8],
-      // Gujarat peninsula
       [68.5, 23.0], [68.0, 23.5], [67.5, 24.0],
-      // NW corner Pakistan/Rajasthan
       [67.0, 24.5], [66.7, 25.2], [67.5, 26.0], [68.5, 27.0],
       [69.5, 27.5], [70.5, 28.0], [71.0, 28.5], [70.5, 29.5],
       [70.0, 30.5], [70.8, 31.5], [71.5, 32.5], [72.5, 33.0],
       [73.5, 33.5], [74.5, 34.0], [75.5, 34.5],
-      // Kashmir — J&K
       [76.5, 34.8], [77.5, 35.5], [78.5, 35.5], [79.5, 35.0],
       [78.5, 34.0], [79.0, 33.5], [79.5, 33.0],
-      // Himachal, Uttarakhand, UP border — Nepal
       [80.5, 32.5], [81.0, 31.5], [81.5, 30.8], [82.5, 30.5],
       [83.5, 30.0], [84.5, 29.5], [85.5, 29.5], [86.5, 29.5],
       [87.0, 29.5], [88.0, 29.5], [88.5, 29.8],
-      // Sikkim, Assam, NE
       [89.0, 27.0], [89.5, 26.5], [90.5, 26.5], [91.5, 26.5],
       [92.5, 26.8], [93.5, 26.8], [94.5, 27.0], [95.0, 27.5],
       [96.0, 28.0], [96.5, 28.5],
-      // Mizoram, Manipur going south
       [97.0, 27.5], [97.0, 26.5], [96.5, 25.5], [96.0, 24.5],
       [95.5, 23.5], [95.0, 22.5], [94.5, 22.0], [93.5, 22.0],
       [93.0, 22.5], [92.5, 23.0], [92.0, 23.5], [91.5, 23.8],
-      // Bangladesh border — West Bengal
       [91.0, 24.0], [90.5, 23.5], [90.0, 23.0], [89.5, 22.5],
       [89.0, 22.0], [88.5, 22.0], [88.0, 22.5], [87.5, 22.5],
       [87.0, 22.0], [86.5, 21.5], [86.0, 21.0],
-      // Odisha coast, AP coast
       [85.5, 20.5], [85.0, 20.0], [84.5, 19.5], [84.0, 18.5],
       [83.5, 18.0], [83.0, 17.5], [82.5, 17.0], [82.0, 16.5],
       [81.5, 16.0], [81.0, 15.5], [80.5, 15.0],
-      // Back to starting coordinate to close polygon
       [68.1, 23.6]
     ]]
   }
@@ -110,44 +97,29 @@ export default function IndiaMap() {
     const path = d3.geoPath().projection(projection)
 
     // ── Grid lines ──
-    const gridG = svg.append('g').attr('opacity', 0.06)
+    const gridG = svg.append('g').attr('opacity', 0.3)
     for (let x = 0; x < W; x += 40)
-      gridG.append('line').attr('x1',x).attr('y1',0).attr('x2',x).attr('y2',H).attr('stroke','#00aaff').attr('stroke-width',0.5)
+      gridG.append('line').attr('x1',x).attr('y1',0).attr('x2',x).attr('y2',H).attr('stroke','#e5e7eb').attr('stroke-width',0.5)
     for (let y = 0; y < H; y += 40)
-      gridG.append('line').attr('x1',0).attr('y1',y).attr('x2',W).attr('y2',y).attr('stroke','#00aaff').attr('stroke-width',0.5)
+      gridG.append('line').attr('x1',0).attr('y1',y).attr('x2',W).attr('y2',y).attr('stroke','#e5e7eb').attr('stroke-width',0.5)
 
     // ── India border (real GeoJSON path) ──
     const mapG = svg.append('g')
 
-    // Glow filter
     const defs = svg.append('defs')
-    const filter = defs.append('filter').attr('id','glow').attr('x','-20%').attr('y','-20%').attr('width','140%').attr('height','140%')
-    filter.append('feGaussianBlur').attr('stdDeviation','3').attr('result','coloredBlur')
-    const merge = filter.append('feMerge')
-    merge.append('feMergeNode').attr('in','coloredBlur')
-    merge.append('feMergeNode').attr('in','SourceGraphic')
-
-    // Outer glow shape
-    mapG.append('path')
-      .datum(INDIA_GEOJSON)
-      .attr('d', path)
-      .attr('fill', 'none')
-      .attr('stroke', 'rgba(0,170,255,0.15)')
-      .attr('stroke-width', 12)
-      .attr('filter', 'url(#glow)')
 
     // Main border
     mapG.append('path')
       .datum(INDIA_GEOJSON)
       .attr('d', path)
-      .attr('fill', 'rgba(8,20,48,0.85)')
-      .attr('stroke', 'rgba(0,170,255,0.55)')
+      .attr('fill', '#e0f2fe')
+      .attr('stroke', '#93c5fd')
       .attr('stroke-width', 1.5)
 
     // Subtle interior fill gradient
     const grad = defs.append('linearGradient').attr('id','mapFill').attr('x1','0').attr('y1','0').attr('x2','0').attr('y2','1')
-    grad.append('stop').attr('offset','0%').attr('stop-color','rgba(0,100,200,0.08)')
-    grad.append('stop').attr('offset','100%').attr('stop-color','rgba(0,30,80,0.04)')
+    grad.append('stop').attr('offset','0%').attr('stop-color','#eff6ff')
+    grad.append('stop').attr('offset','100%').attr('stop-color','#dbeafe')
 
     mapG.append('path')
       .datum(INDIA_GEOJSON)
@@ -178,14 +150,14 @@ export default function IndiaMap() {
       flowG.append('path')
         .attr('d', arcPath)
         .attr('fill', 'none')
-        .attr('stroke', flow.suspicious ? 'rgba(255,42,74,0.12)' : 'rgba(0,170,255,0.08)')
+        .attr('stroke', flow.suspicious ? 'rgba(248,113,113,0.12)' : 'rgba(59,130,246,0.08)')
         .attr('stroke-width', 4)
 
       // Main arc
       const arcEl = flowG.append('path')
         .attr('d', arcPath)
         .attr('fill', 'none')
-        .attr('stroke', flow.suspicious ? 'rgba(255,42,74,0.7)' : 'rgba(0,170,255,0.45)')
+        .attr('stroke', flow.suspicious ? '#b91c1c' : '#2563eb')
         .attr('stroke-width', flow.suspicious ? 2 : 1.2)
         .attr('stroke-dasharray', flow.suspicious ? '6 3' : '4 4')
 
@@ -212,14 +184,14 @@ export default function IndiaMap() {
         .attr('text-anchor', 'middle')
         .attr('font-size', 9)
         .attr('font-family', 'JetBrains Mono, monospace')
-        .attr('fill', flow.suspicious ? '#ff2a4a' : '#5a7fa8')
+        .attr('fill', flow.suspicious ? '#b91c1c' : '#4b5563')
         .attr('opacity', 0.85)
         .text(`₹${(flow.amount/100000).toFixed(0)}L`)
 
       // Moving dot along arc
       const movDot = flowG.append('circle')
         .attr('r', flow.suspicious ? 4 : 3)
-        .attr('fill', flow.suspicious ? '#ff2a4a' : '#00aaff')
+        .attr('fill', flow.suspicious ? '#b91c1c' : '#0b5ed7')
         .attr('opacity', 0.9)
 
       const animateDot = () => {
@@ -297,13 +269,13 @@ export default function IndiaMap() {
         .attr('cx', x).attr('cy', y).attr('r', r)
         .attr('fill', c.color)
         .attr('opacity', 0.9)
-        .attr('stroke', '#040810')
+        .attr('stroke', '#ffffff')
         .attr('stroke-width', 1.5)
 
       // Inner dot
       g.append('circle')
         .attr('cx', x).attr('cy', y).attr('r', r * 0.38)
-        .attr('fill', '#040810').attr('opacity', 0.7)
+        .attr('fill', '#1f2937').attr('opacity', 0.7)
 
       // City name label
       g.append('text')
@@ -311,7 +283,7 @@ export default function IndiaMap() {
         .attr('font-size', 10)
         .attr('font-family', 'JetBrains Mono, monospace')
         .attr('font-weight', '600')
-        .attr('fill', c.risk > 70 ? '#ff6b6b' : c.risk > 50 ? '#ffcc44' : '#8aafd4')
+        .attr('fill', c.risk > 70 ? '#b91c1c' : c.risk > 50 ? '#d97706' : '#1d4ed8')
         .text(c.name)
     })
 
@@ -323,19 +295,38 @@ export default function IndiaMap() {
     <div style={{ maxWidth: 1400 }}>
 
       {/* Header */}
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20, paddingBottom:16, borderBottom:'1px solid #0f2040' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 20,
+          paddingBottom: 16,
+          borderBottom: '1px solid #e5e7eb',
+        }}
+      >
         <div>
-          <div style={{ fontSize:9, color:'#5a7fa8', letterSpacing:'0.2em', marginBottom:4 }}>GEOGRAPHIC INTELLIGENCE</div>
-          <h1 style={{ fontSize:22, fontWeight:700, color:'#e8f4ff', fontFamily:'Rajdhani, sans-serif' }}>INDIA MONEY FLOW MAP</h1>
+          <div style={{ fontSize:9, color:'#6b7280', letterSpacing:'0.2em', marginBottom:4 }}>GEOGRAPHIC INTELLIGENCE</div>
+          <h1 style={{ fontSize:22, fontWeight:700, color:'#111827', fontFamily:'Rajdhani, sans-serif' }}>INDIA MONEY FLOW MAP</h1>
         </div>
         <div style={{ display:'flex', gap:8 }}>
           {[
-            { label:'TOTAL FLOW',      value:fmt(stats.totalFlow),      color:'#00aaff' },
-            { label:'SUSPICIOUS',      value:fmt(stats.suspiciousFlow), color:'#ff2a4a' },
-            { label:'HOT CITY',        value:stats.hotCity,             color:'#ffaa00' },
+            { label:'TOTAL FLOW',      value:fmt(stats.totalFlow),      color:'#0b5ed7' },
+            { label:'SUSPICIOUS',      value:fmt(stats.suspiciousFlow), color:'#b91c1c' },
+            { label:'HOT CITY',        value:stats.hotCity,             color:'#d97706' },
           ].map(s => (
-            <div key={s.label} style={{ padding:'8px 14px', background:'#080f1e', border:'1px solid #0f2040', borderRadius:3, textAlign:'center' }}>
-              <div style={{ fontSize:8, color:'#5a7fa8', letterSpacing:'0.1em', marginBottom:3 }}>{s.label}</div>
+            <div
+              key={s.label}
+              style={{
+                padding: '8px 14px',
+                background: '#ffffff',
+                border: '1px solid #e5e7eb',
+                borderRadius: 6,
+                textAlign: 'center',
+                boxShadow: '0 4px 10px rgba(15,23,42,0.05)',
+              }}
+            >
+              <div style={{ fontSize:8, color:'#6b7280', letterSpacing:'0.1em', marginBottom:3 }}>{s.label}</div>
               <div style={{ fontSize:14, fontWeight:700, fontFamily:'JetBrains Mono', color:s.color }}>{s.value}</div>
             </div>
           ))}
@@ -345,8 +336,18 @@ export default function IndiaMap() {
       <div style={{ display:'grid', gridTemplateColumns:'1fr 280px', gap:16 }}>
 
         {/* Map */}
-        <div style={{ background:'#040d1f', border:'1px solid #0f2040', borderRadius:4, overflow:'hidden', position:'relative', minHeight:580 }}>
-          <div style={{ position:'absolute', top:12, left:12, fontSize:9, color:'#5a7fa8', letterSpacing:'0.15em', zIndex:2 }}>
+        <div
+          style={{
+            background: '#ffffff',
+            border: '1px solid #e5e7eb',
+            borderRadius: 8,
+            overflow: 'hidden',
+            position: 'relative',
+            minHeight: 580,
+            boxShadow: '0 8px 20px rgba(15,23,42,0.06)',
+          }}
+        >
+          <div style={{ position:'absolute', top:12, left:12, fontSize:9, color:'#6b7280', letterSpacing:'0.15em', zIndex:2, background:'rgba(255,255,255,0.9)', padding:'4px 8px', borderRadius:999, border:'1px solid #e5e7eb' }}>
             🇮🇳 INDIA — FINANCIAL CRIME HEATMAP
           </div>
 
@@ -354,33 +355,61 @@ export default function IndiaMap() {
 
           {/* Tooltip */}
           {tooltip && (
-            <div style={{ position:'absolute', left:tooltip.x + 12, top:tooltip.y - 10, background:'#080f1e', border:`1px solid ${tooltip.color}`, borderRadius:4, padding:'8px 12px', pointerEvents:'none', zIndex:10, minWidth:130 }}>
+            <div
+              style={{
+                position: 'absolute',
+                left: tooltip.x + 12,
+                top: tooltip.y - 10,
+                background: '#ffffff',
+                border: `1px solid ${tooltip.color}`,
+                borderRadius: 6,
+                padding: '8px 12px',
+                pointerEvents: 'none',
+                zIndex: 10,
+                minWidth: 130,
+                boxShadow: '0 10px 25px rgba(15,23,42,0.15)',
+              }}
+            >
               <div style={{ fontSize:11, fontWeight:700, color:tooltip.color, marginBottom:4 }}>{tooltip.name}</div>
-              <div style={{ fontSize:9, color:'#5a7fa8', marginBottom:2 }}>
-                RISK: <span style={{ color: tooltip.risk > 70 ? '#ff2a4a' : tooltip.risk > 50 ? '#ffaa00' : '#00aaff', fontWeight:700 }}>{tooltip.risk}/100</span>
+              <div style={{ fontSize:9, color:'#6b7280', marginBottom:2 }}>
+                RISK:{' '}
+                <span
+                  style={{
+                    color:
+                      tooltip.risk > 70
+                        ? '#b91c1c'
+                        : tooltip.risk > 50
+                        ? '#d97706'
+                        : '#0b5ed7',
+                    fontWeight: 700,
+                  }}
+                >
+                  {tooltip.risk}/100
+                </span>
               </div>
-              <div style={{ fontSize:9, color:'#5a7fa8' }}>
-                FLOW: <span style={{ color:'#8aafd4', fontWeight:700 }}>{fmt(tooltip.amount)}</span>
+              <div style={{ fontSize:9, color:'#6b7280' }}>
+                FLOW:{' '}
+                <span style={{ color:'#111827', fontWeight:700 }}>{fmt(tooltip.amount)}</span>
               </div>
             </div>
           )}
 
           {/* Legend */}
-          <div style={{ position:'absolute', bottom:14, left:14, background:'rgba(4,8,16,0.85)', border:'1px solid #0f2040', borderRadius:3, padding:'8px 10px' }}>
-            <div style={{ fontSize:8, color:'#5a7fa8', marginBottom:6, letterSpacing:'0.1em' }}>LEGEND</div>
+          <div style={{ position:'absolute', bottom:14, left:14, background:'rgba(255,255,255,0.95)', border:'1px solid #e5e7eb', borderRadius:6, padding:'8px 10px', boxShadow:'0 8px 18px rgba(15,23,42,0.12)' }}>
+            <div style={{ fontSize:8, color:'#6b7280', marginBottom:6, letterSpacing:'0.1em' }}>LEGEND</div>
             {[
-              { color:'#ff2a4a', label:'High risk city (>70)' },
-              { color:'#ffaa00', label:'Medium risk (50–70)' },
-              { color:'#00aaff', label:'Low risk (<50)' },
-              { color:'#ff2a4a', label:'Suspicious flow', dashed:true },
-              { color:'#00aaff', label:'Normal flow', dashed:true },
+              { color:'#b91c1c', label:'High risk city (>70)' },
+              { color:'#d97706', label:'Medium risk (50–70)' },
+              { color:'#0b5ed7', label:'Low risk (<50)' },
+              { color:'#b91c1c', label:'Suspicious flow', dashed:true },
+              { color:'#0b5ed7', label:'Normal flow', dashed:true },
             ].map((l,i) => (
               <div key={i} style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
                 {l.dashed
                   ? <div style={{ width:18, height:1, borderTop:`2px dashed ${l.color}`, opacity:0.8 }} />
                   : <div style={{ width:10, height:10, borderRadius:'50%', background:l.color, flexShrink:0 }} />
                 }
-                <span style={{ fontSize:9, color:'#8aafd4' }}>{l.label}</span>
+                <span style={{ fontSize:9, color:'#4b5563' }}>{l.label}</span>
               </div>
             ))}
           </div>
@@ -390,20 +419,20 @@ export default function IndiaMap() {
         <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
 
           {/* City risk table */}
-          <div style={{ background:'#080f1e', border:'1px solid #0f2040', borderRadius:4, padding:14 }}>
-            <div style={{ fontSize:9, color:'#5a7fa8', letterSpacing:'0.15em', marginBottom:12 }}>CITY RISK RANKINGS</div>
+          <div style={{ background:'#ffffff', border:'1px solid #e5e7eb', borderRadius:8, padding:14, boxShadow:'0 4px 10px rgba(15,23,42,0.05)' }}>
+            <div style={{ fontSize:9, color:'#6b7280', letterSpacing:'0.15em', marginBottom:12 }}>CITY RISK RANKINGS</div>
             {[...CITIES].sort((a,b) => b.risk - a.risk).map((c,i) => (
               <div key={c.id} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
-                <div style={{ width:16, fontSize:9, color:'#2a3f5f', fontFamily:'JetBrains Mono' }}>#{i+1}</div>
+                <div style={{ width:16, fontSize:9, color:'#9ca3af', fontFamily:'JetBrains Mono' }}>#{i+1}</div>
                 <div style={{ flex:1 }}>
-                  <div style={{ fontSize:11, fontWeight:600, color: c.risk > 70 ? '#ff2a4a' : c.risk > 50 ? '#ffaa00' : '#8aafd4', marginBottom:2 }}>
+                  <div style={{ fontSize:11, fontWeight:600, color: c.risk > 70 ? '#b91c1c' : c.risk > 50 ? '#d97706' : '#1d4ed8', marginBottom:2 }}>
                     {c.name}
                   </div>
-                  <div style={{ height:3, background:'#0f2040', borderRadius:2 }}>
-                    <div style={{ height:'100%', width:`${c.risk}%`, background: c.risk > 70 ? '#ff2a4a' : c.risk > 50 ? '#ffaa00' : '#00aaff', borderRadius:2 }} />
+                  <div style={{ height:3, background:'#e5e7eb', borderRadius:2 }}>
+                    <div style={{ height:'100%', width:`${c.risk}%`, background: c.risk > 70 ? '#b91c1c' : c.risk > 50 ? '#d97706' : '#0b5ed7', borderRadius:2 }} />
                   </div>
                 </div>
-                <div style={{ fontSize:11, fontWeight:700, fontFamily:'JetBrains Mono', color: c.risk > 70 ? '#ff2a4a' : c.risk > 50 ? '#ffaa00' : '#00aaff', width:28, textAlign:'right' }}>
+                <div style={{ fontSize:11, fontWeight:700, fontFamily:'JetBrains Mono', color: c.risk > 70 ? '#b91c1c' : c.risk > 50 ? '#d97706' : '#0b5ed7', width:28, textAlign:'right' }}>
                   {c.risk}
                 </div>
               </div>
@@ -411,19 +440,19 @@ export default function IndiaMap() {
           </div>
 
           {/* Suspicious flows */}
-          <div style={{ background:'#080f1e', border:'1px solid rgba(255,42,74,0.25)', borderRadius:4, padding:14 }}>
-            <div style={{ fontSize:9, color:'#ff2a4a', letterSpacing:'0.15em', marginBottom:12 }}>🔴 SUSPICIOUS FLOWS</div>
+          <div style={{ background:'#ffffff', border:'1px solid #fecaca', borderRadius:8, padding:14, boxShadow:'0 4px 10px rgba(15,23,42,0.05)' }}>
+            <div style={{ fontSize:9, color:'#b91c1c', letterSpacing:'0.15em', marginBottom:12 }}>🔴 SUSPICIOUS FLOWS</div>
             {FLOWS.filter(f => f.suspicious).map((f, i) => (
-              <div key={i} style={{ padding:'8px 10px', background:'rgba(255,42,74,0.05)', border:'1px solid rgba(255,42,74,0.15)', borderRadius:3, marginBottom:6 }}>
+              <div key={i} style={{ padding:'8px 10px', background:'#fef2f2', border:'1px solid #fecaca', borderRadius:6, marginBottom:6 }}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:2 }}>
-                  <span style={{ fontSize:11, fontFamily:'JetBrains Mono', color:'#ff2a4a' }}>
+                  <span style={{ fontSize:11, fontFamily:'JetBrains Mono', color:'#b91c1c' }}>
                     {f.from} → {f.to}
                   </span>
-                  <span style={{ fontSize:11, fontWeight:700, color:'#ffaa00', fontFamily:'JetBrains Mono' }}>
+                  <span style={{ fontSize:11, fontWeight:700, color:'#d97706', fontFamily:'JetBrains Mono' }}>
                     {fmt(f.amount)}
                   </span>
                 </div>
-                <div style={{ fontSize:9, color:'#5a7fa8' }}>
+                <div style={{ fontSize:9, color:'#6b7280' }}>
                   CIRCULAR LAYERING — FLAGGED
                 </div>
               </div>
@@ -431,16 +460,16 @@ export default function IndiaMap() {
           </div>
 
           {/* Total stats */}
-          <div style={{ background:'#080f1e', border:'1px solid #0f2040', borderRadius:4, padding:14 }}>
-            <div style={{ fontSize:9, color:'#5a7fa8', letterSpacing:'0.15em', marginBottom:10 }}>FLOW STATISTICS</div>
+          <div style={{ background:'#ffffff', border:'1px solid #e5e7eb', borderRadius:8, padding:14, boxShadow:'0 4px 10px rgba(15,23,42,0.05)' }}>
+            <div style={{ fontSize:9, color:'#6b7280', letterSpacing:'0.15em', marginBottom:10 }}>FLOW STATISTICS</div>
             {[
-              { label:'Total monitored', value:fmt(stats.totalFlow),       color:'#00aaff' },
-              { label:'Suspicious',      value:fmt(stats.suspiciousFlow),  color:'#ff2a4a' },
-              { label:'Clean flows',     value:fmt(stats.totalFlow - stats.suspiciousFlow), color:'#00e676' },
-              { label:'Suspicious %',    value:`${Math.round(stats.suspiciousFlow/stats.totalFlow*100)||0}%`, color:'#ffaa00' },
+              { label:'Total monitored', value:fmt(stats.totalFlow),       color:'#0b5ed7' },
+              { label:'Suspicious',      value:fmt(stats.suspiciousFlow),  color:'#b91c1c' },
+              { label:'Clean flows',     value:fmt(stats.totalFlow - stats.suspiciousFlow), color:'#15803d' },
+              { label:'Suspicious %',    value:`${Math.round(stats.suspiciousFlow/stats.totalFlow*100)||0}%`, color:'#d97706' },
             ].map(s => (
               <div key={s.label} style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
-                <span style={{ fontSize:11, color:'#5a7fa8' }}>{s.label}</span>
+                <span style={{ fontSize:11, color:'#6b7280' }}>{s.label}</span>
                 <span style={{ fontSize:12, fontWeight:700, fontFamily:'JetBrains Mono', color:s.color }}>{s.value}</span>
               </div>
             ))}

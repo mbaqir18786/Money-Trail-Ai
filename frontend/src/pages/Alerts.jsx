@@ -61,30 +61,44 @@ AUTHORIZED BY: AML Intelligence System v2.0
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #0f2040' }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '20px',
+        paddingBottom: '16px',
+        borderBottom: '1px solid #e5e7eb'
+      }}>
         <div>
-          <div style={{ fontSize: '9px', color: '#5a7fa8', letterSpacing: '0.2em', marginBottom: '4px' }}>FRAUD DETECTION ENGINE</div>
-          <h1 style={{ fontSize: '20px', fontWeight: '700', fontFamily: 'Rajdhani', letterSpacing: '0.05em' }}>ACTIVE ALERTS</h1>
+          <div style={{ fontSize: '9px', color: '#6b7280', letterSpacing: '0.18em', marginBottom: '4px' }}>FRAUD DETECTION ENGINE</div>
+          <h1 style={{ fontSize: '20px', fontWeight: '700', fontFamily: 'Rajdhani, system-ui, sans-serif', letterSpacing: '0.04em', color: '#111827' }}>ACTIVE ALERTS</h1>
         </div>
         <button onClick={runAnalysis} disabled={loading} style={{
-          padding: '9px 20px', borderRadius: '3px', fontSize: '11px', fontWeight: '700',
-          background: 'rgba(255,42,74,0.15)', border: '1px solid rgba(255,42,74,0.4)',
-          color: '#ff2a4a', letterSpacing: '0.1em'
+          padding: '9px 20px',
+          borderRadius: '999px',
+          fontSize: '11px',
+          fontWeight: '600',
+          background: 'rgba(11,94,215,0.06)',
+          border: '1px solid rgba(11,94,215,0.45)',
+          color: '#0b5ed7',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          cursor: 'pointer'
         }}>
-          {loading ? '◌ SCANNING...' : '⚡ RUN FRAUD DETECTION'}
+          {loading ? '◌ Scanning...' : '⚡ Run fraud detection'}
         </button>
       </div>
 
       {alerts.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '60px' }}>
           <div style={{ fontSize: '36px', marginBottom: '12px', opacity: 0.3 }}>◎</div>
-          <div style={{ fontSize: '11px', color: '#2a3f5f', letterSpacing: '0.1em' }}>NO ALERTS — RUN DETECTION TO ANALYZE</div>
+          <div style={{ fontSize: '11px', color: '#6b7280', letterSpacing: '0.1em' }}>NO ALERTS — RUN DETECTION TO ANALYZE</div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {alerts.map((alert, i) => (
             <div key={i} className="card" style={{
-              borderLeft: `2px solid ${alert.severity === 'CRITICAL' ? '#ff2a4a' : '#ffaa00'}`,
+              borderLeft: `3px solid ${alert.severity === 'CRITICAL' ? '#b91c1c' : '#d97706'}`,
               cursor: 'pointer'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
@@ -92,14 +106,13 @@ AUTHORIZED BY: AML Intelligence System v2.0
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                   <div style={{
                     width: '8px', height: '8px', borderRadius: '50%',
-                    background: alert.severity === 'CRITICAL' ? '#ff2a4a' : '#ffaa00',
-                    boxShadow: `0 0 8px ${alert.severity === 'CRITICAL' ? '#ff2a4a' : '#ffaa00'}`
+                    background: alert.severity === 'CRITICAL' ? '#b91c1c' : '#d97706'
                   }} />
                   <div>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#e8f4ff', letterSpacing: '0.08em' }}>
+                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#111827', letterSpacing: '0.08em' }}>
                       {alert.type?.replace(/_/g, ' ').toUpperCase()}
                     </div>
-                    <div style={{ fontSize: '9px', color: '#5a7fa8', marginTop: '2px' }}>
+                    <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
                       {new Date(alert.timestamp).toLocaleString('en-IN')} · PMLA 2002 SECTION 3
                     </div>
                   </div>
@@ -109,9 +122,9 @@ AUTHORIZED BY: AML Intelligence System v2.0
                     {alert.severity}
                   </span>
                   <button onClick={(e) => { e.stopPropagation(); downloadSTR(alert) }} style={{
-                    padding: '4px 10px', borderRadius: '2px', fontSize: '9px', fontWeight: '700',
-                    background: 'rgba(0,170,255,0.1)', border: '1px solid rgba(0,170,255,0.3)',
-                    color: '#00aaff', letterSpacing: '0.1em'
+                    padding: '4px 10px', borderRadius: '999px', fontSize: '9px', fontWeight: '600',
+                    background: 'rgba(11,94,215,0.06)', border: '1px solid rgba(11,94,215,0.45)',
+                    color: '#0b5ed7', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer'
                   }}>
                     ↓ STR
                   </button>
@@ -120,11 +133,11 @@ AUTHORIZED BY: AML Intelligence System v2.0
               </div>
 
               {expanded === i && (
-                <div style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px solid #0f2040', animation: 'fadeUp 0.3s ease' }}>
+                <div style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px solid #e5e7eb', animation: 'fadeUp 0.3s ease' }}>
                   <pre style={{
-                    fontSize: '11px', color: '#8aafd4', whiteSpace: 'pre-wrap',
+                    fontSize: '11px', color: '#111827', whiteSpace: 'pre-wrap',
                     fontFamily: 'JetBrains Mono', lineHeight: '1.8',
-                    background: 'rgba(0,0,0,0.3)', padding: '14px', borderRadius: '3px'
+                    background: '#f9fafb', padding: '14px', borderRadius: '6px'
                   }}>
                     {alert.text}
                   </pre>

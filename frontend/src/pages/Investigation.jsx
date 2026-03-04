@@ -35,50 +35,98 @@ export default function Investigation() {
 
   return (
     <div>
-      <div style={{ marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #0f2040' }}>
-        <div style={{ fontSize: '9px', color: '#5a7fa8', letterSpacing: '0.2em', marginBottom: '4px' }}>CASE MANAGEMENT</div>
-        <h1 style={{ fontSize: '20px', fontWeight: '700', fontFamily: 'Rajdhani', letterSpacing: '0.05em' }}>INVESTIGATION PANEL</h1>
+      <div style={{
+        marginBottom: '20px',
+        paddingBottom: '16px',
+        borderBottom: '1px solid #e5e7eb',
+      }}>
+        <div style={{
+          fontSize: '9px',
+          color: '#6b7280',
+          letterSpacing: '0.18em',
+          marginBottom: '4px',
+          textTransform: 'uppercase',
+        }}>
+          CASE MANAGEMENT
+        </div>
+        <h1 style={{
+          fontSize: '20px',
+          fontWeight: '700',
+          fontFamily: 'Rajdhani, system-ui, sans-serif',
+          letterSpacing: '0.04em',
+          color: '#111827',
+        }}>
+          INVESTIGATION PANEL
+        </h1>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: selected ? '380px 1fr' : '1fr', gap: '12px' }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: selected ? '380px 1fr' : '1fr',
+        gap: '12px',
+        alignItems: 'flex-start',
+      }}>
 
         {/* Case list */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {CASES.map(c => (
-            <div key={c.id} className="card" onClick={() => { setSelected(c); setReport(null) }}
+            <div
+              key={c.id}
+              className="card"
+              onClick={() => { setSelected(c); setReport(null) }}
               style={{
-                cursor: 'pointer', transition: 'all 0.15s',
-                borderLeft: `2px solid ${c.severity === 'CRITICAL' ? '#ff2a4a' : '#ffaa00'}`,
-                background: selected?.id === c.id ? '#0c1525' : '#080f1e'
-              }}>
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                borderLeft: `2px solid ${c.severity === 'CRITICAL' ? '#b91c1c' : '#d97706'}`,
+                background: selected?.id === c.id ? 'rgba(11,94,215,0.04)' : '#ffffff',
+                border: selected?.id === c.id
+                  ? '1px solid rgba(11,94,215,0.35)'
+                  : '1px solid #e5e7eb',
+                boxShadow: '0 1px 2px rgba(15,23,42,0.04)',
+              }}
+            >
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '9px', color: '#5a7fa8', fontFamily: 'JetBrains Mono' }}>{c.id}</span>
+                <span style={{ fontSize: '9px', color: '#6b7280', fontFamily: 'JetBrains Mono' }}>{c.id}</span>
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <span className={`badge badge-${c.severity === 'CRITICAL' ? 'critical' : 'high'}`}>{c.severity}</span>
-                  <span className="badge badge-info" style={{ color: STATUS_COLOR[c.status], borderColor: STATUS_COLOR[c.status] + '44', background: STATUS_COLOR[c.status] + '15' }}>
+                  <span
+                    className="badge badge-info"
+                    style={{
+                      color: STATUS_COLOR[c.status],
+                      borderColor: STATUS_COLOR[c.status] + '44',
+                      background: STATUS_COLOR[c.status] + '15',
+                    }}
+                  >
                     {c.status}
                   </span>
                 </div>
               </div>
-              <div style={{ fontSize: '13px', fontWeight: '700', fontFamily: 'Rajdhani', letterSpacing: '0.05em', marginBottom: '6px', color: '#e8f4ff' }}>
+              <div style={{
+                fontSize: '13px',
+                fontWeight: '700',
+                fontFamily: 'Rajdhani, system-ui, sans-serif',
+                letterSpacing: '0.05em',
+                marginBottom: '6px',
+                color: '#111827',
+              }}>
                 {c.type}
               </div>
               <div style={{ display: 'flex', gap: '16px' }}>
                 <div>
-                  <div style={{ fontSize: '9px', color: '#5a7fa8' }}>AMOUNT</div>
-                  <div style={{ fontSize: '11px', color: '#00aaff', fontWeight: '700' }}>₹{(c.amount / 100000).toFixed(1)}L</div>
+                  <div style={{ fontSize: '9px', color: '#6b7280' }}>AMOUNT</div>
+                  <div style={{ fontSize: '11px', color: '#111827', fontWeight: '700' }}>₹{(c.amount / 100000).toFixed(1)}L</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '9px', color: '#5a7fa8' }}>WINDOW</div>
-                  <div style={{ fontSize: '11px', color: '#e8f4ff', fontWeight: '700' }}>{c.window}</div>
+                  <div style={{ fontSize: '9px', color: '#6b7280' }}>WINDOW</div>
+                  <div style={{ fontSize: '11px', color: '#111827', fontWeight: '700' }}>{c.window}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '9px', color: '#5a7fa8' }}>RISK</div>
-                  <div style={{ fontSize: '11px', color: '#ff2a4a', fontWeight: '700' }}>{c.riskScore}/100</div>
+                  <div style={{ fontSize: '9px', color: '#6b7280' }}>RISK</div>
+                  <div style={{ fontSize: '11px', color: '#b91c1c', fontWeight: '700' }}>{c.riskScore}/100</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '9px', color: '#5a7fa8' }}>ACCOUNTS</div>
-                  <div style={{ fontSize: '11px', color: '#e8f4ff', fontWeight: '700' }}>{c.accounts.length}</div>
+                  <div style={{ fontSize: '9px', color: '#6b7280' }}>ACCOUNTS</div>
+                  <div style={{ fontSize: '11px', color: '#111827', fontWeight: '700' }}>{c.accounts.length}</div>
                 </div>
               </div>
             </div>
@@ -87,18 +135,40 @@ export default function Investigation() {
 
         {/* Case detail */}
         {selected && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', animation: 'slideRight 0.3s ease' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
 
             {/* Case header */}
-            <div className="card card-red">
+            <div className="card">
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
                 <div>
-                  <div style={{ fontSize: '9px', color: '#5a7fa8', letterSpacing: '0.15em', marginBottom: '4px' }}>{selected.id}</div>
-                  <div style={{ fontSize: '18px', fontWeight: '700', fontFamily: 'Rajdhani' }}>{selected.type}</div>
+                  <div style={{
+                    fontSize: '9px',
+                    color: '#6b7280',
+                    letterSpacing: '0.15em',
+                    marginBottom: '4px',
+                  }}>
+                    {selected.id}
+                  </div>
+                  <div style={{
+                    fontSize: '18px',
+                    fontWeight: '700',
+                    fontFamily: 'Rajdhani, system-ui, sans-serif',
+                    color: '#111827',
+                  }}>
+                    {selected.type}
+                  </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '36px', fontWeight: '700', fontFamily: 'JetBrains Mono', color: '#ff2a4a', lineHeight: 1 }}>{selected.riskScore}</div>
-                  <div style={{ fontSize: '9px', color: '#5a7fa8' }}>RISK / 100</div>
+                  <div style={{
+                    fontSize: '36px',
+                    fontWeight: '700',
+                    fontFamily: 'JetBrains Mono, monospace',
+                    color: '#b91c1c',
+                    lineHeight: 1,
+                  }}>
+                    {selected.riskScore}
+                  </div>
+                  <div style={{ fontSize: '9px', color: '#6b7280' }}>RISK / 100</div>
                 </div>
               </div>
 
@@ -109,48 +179,119 @@ export default function Investigation() {
                   { label: 'REGULATORY', value: selected.pmla },
                   { label: 'ACCOUNTS', value: selected.accounts.length + ' involved' },
                 ].map(({ label, value }) => (
-                  <div key={label} style={{ padding: '8px', background: 'rgba(0,0,0,0.3)', borderRadius: '3px', border: '1px solid #0f2040' }}>
-                    <div style={{ fontSize: '9px', color: '#5a7fa8', letterSpacing: '0.1em', marginBottom: '4px' }}>{label}</div>
-                    <div style={{ fontSize: '11px', color: '#e8f4ff', fontFamily: 'JetBrains Mono' }}>{value}</div>
+                  <div
+                    key={label}
+                    style={{
+                      padding: '8px',
+                      background: '#f9fafb',
+                      borderRadius: '4px',
+                      border: '1px solid #e5e7eb',
+                    }}
+                  >
+                    <div style={{
+                      fontSize: '9px',
+                      color: '#6b7280',
+                      letterSpacing: '0.1em',
+                      marginBottom: '4px',
+                    }}>
+                      {label}
+                    </div>
+                    <div style={{
+                      fontSize: '11px',
+                      color: '#111827',
+                      fontFamily: 'JetBrains Mono, monospace',
+                    }}>
+                      {value}
+                    </div>
                   </div>
                 ))}
               </div>
 
               {/* Accounts involved */}
               <div style={{ marginBottom: '14px' }}>
-                <div style={{ fontSize: '9px', color: '#5a7fa8', letterSpacing: '0.1em', marginBottom: '6px' }}>ACCOUNTS INVOLVED</div>
+                <div style={{
+                  fontSize: '9px',
+                  color: '#6b7280',
+                  letterSpacing: '0.1em',
+                  marginBottom: '6px',
+                }}>
+                  ACCOUNTS INVOLVED
+                </div>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   {selected.accounts.map(acc => (
-                    <span key={acc} style={{
-                      padding: '3px 8px', borderRadius: '2px', fontSize: '10px',
-                      fontFamily: 'JetBrains Mono', color: '#ff2a4a',
-                      background: 'rgba(255,42,74,0.08)', border: '1px solid rgba(255,42,74,0.2)'
-                    }}>{acc}</span>
+                    <span
+                      key={acc}
+                      style={{
+                        padding: '3px 8px',
+                        borderRadius: '12px',
+                        fontSize: '10px',
+                        fontFamily: 'JetBrains Mono, monospace',
+                        color: '#b91c1c',
+                        background: '#fef2f2',
+                        border: '1px solid #fecaca',
+                      }}
+                    >
+                      {acc}
+                    </span>
                   ))}
                 </div>
               </div>
 
               {/* Action buttons */}
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button onClick={() => generateReport(selected)} disabled={generating} style={{
-                  flex: 1, padding: '9px', borderRadius: '3px', fontSize: '10px', fontWeight: '700',
-                  background: 'rgba(180,74,255,0.15)', border: '1px solid rgba(180,74,255,0.4)',
-                  color: '#b44aff', letterSpacing: '0.1em'
-                }}>
+                <button
+                  onClick={() => generateReport(selected)}
+                  disabled={generating}
+                  style={{
+                    flex: 1,
+                    padding: '9px',
+                    borderRadius: '999px',
+                    fontSize: '10px',
+                    fontWeight: '700',
+                    background: 'rgba(11,94,215,0.06)',
+                    border: '1px solid rgba(11,94,215,0.45)',
+                    color: '#0b5ed7',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    cursor: 'pointer',
+                  }}
+                >
                   {generating ? '◌ GENERATING...' : '◈ GENERATE FIU REPORT'}
                 </button>
-                <button onClick={() => toast.success('Account freeze order sent to core banking')} style={{
-                  flex: 1, padding: '9px', borderRadius: '3px', fontSize: '10px', fontWeight: '700',
-                  background: 'rgba(255,42,74,0.15)', border: '1px solid rgba(255,42,74,0.4)',
-                  color: '#ff2a4a', letterSpacing: '0.1em'
-                }}>
+                <button
+                  onClick={() => toast.success('Account freeze order sent to core banking')}
+                  style={{
+                    flex: 1,
+                    padding: '9px',
+                    borderRadius: '999px',
+                    fontSize: '10px',
+                    fontWeight: '700',
+                    background: 'rgba(220,38,38,0.06)',
+                    border: '1px solid rgba(220,38,38,0.5)',
+                    color: '#b91c1c',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    cursor: 'pointer',
+                  }}
+                >
                   ◉ FREEZE ACCOUNTS
                 </button>
-                <button onClick={() => toast('Case escalated to CISO', { icon: '📤' })} style={{
-                  flex: 1, padding: '9px', borderRadius: '3px', fontSize: '10px', fontWeight: '700',
-                  background: 'rgba(255,170,0,0.1)', border: '1px solid rgba(255,170,0,0.3)',
-                  color: '#ffaa00', letterSpacing: '0.1em'
-                }}>
+                <button
+                  onClick={() => toast('Case escalated to CISO', { icon: '📤' })}
+                  style={{
+                    flex: 1,
+                    padding: '9px',
+                    borderRadius: '999px',
+                    fontSize: '10px',
+                    fontWeight: '700',
+                    background: 'rgba(234,179,8,0.08)',
+                    border: '1px solid rgba(234,179,8,0.5)',
+                    color: '#b45309',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    cursor: 'pointer',
+                  }}
+                >
                   ⚡ ESCALATE TO CISO
                 </button>
               </div>
@@ -158,44 +299,84 @@ export default function Investigation() {
 
             {/* Notes */}
             <div className="card">
-              <div style={{ fontSize: '9px', color: '#5a7fa8', letterSpacing: '0.15em', marginBottom: '8px' }}>INVESTIGATOR NOTES</div>
+              <div style={{
+                fontSize: '9px',
+                color: '#6b7280',
+                letterSpacing: '0.15em',
+                marginBottom: '8px',
+              }}>
+                INVESTIGATOR NOTES
+              </div>
               <textarea
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
                 placeholder="Add investigation notes..."
                 style={{
-                  width: '100%', minHeight: '80px', background: 'rgba(0,0,0,0.3)',
-                  border: '1px solid #0f2040', borderRadius: '3px', padding: '10px',
-                  color: '#8aafd4', fontSize: '11px', fontFamily: 'JetBrains Mono',
-                  resize: 'vertical', outline: 'none', lineHeight: '1.6'
+                  width: '100%',
+                  minHeight: '80px',
+                  background: '#f9fafb',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '4px',
+                  padding: '10px',
+                  color: '#111827',
+                  fontSize: '11px',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  resize: 'vertical',
+                  outline: 'none',
+                  lineHeight: '1.6',
                 }}
               />
             </div>
 
             {/* FIU Report */}
             {report && (
-              <div className="card card-purple" style={{ animation: 'fadeUp 0.3s ease' }}>
+              <div className="card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                   <div>
-                    <div style={{ fontSize: '9px', color: '#b44aff', letterSpacing: '0.15em', marginBottom: '2px' }}>FIU REPORT GENERATED</div>
-                    <div style={{ fontSize: '11px', color: '#e8f4ff', fontFamily: 'JetBrains Mono' }}>{report.reportId}</div>
+                    <div style={{
+                      fontSize: '9px',
+                      color: '#0b5ed7',
+                      letterSpacing: '0.15em',
+                      marginBottom: '2px',
+                    }}>
+                      FIU REPORT GENERATED
+                    </div>
+                    <div style={{
+                      fontSize: '11px',
+                      color: '#111827',
+                      fontFamily: 'JetBrains Mono, monospace',
+                    }}>
+                      {report.reportId}
+                    </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '9px', color: '#5a7fa8' }}>DEADLINE</div>
-                    <div style={{ fontSize: '11px', color: '#ff2a4a', fontWeight: '700' }}>
+                    <div style={{ fontSize: '9px', color: '#6b7280' }}>DEADLINE</div>
+                    <div style={{ fontSize: '11px', color: '#b91c1c', fontWeight: '700' }}>
                       {new Date(report.fiuSubmissionDeadline).toLocaleDateString('en-IN')}
                     </div>
                   </div>
                 </div>
                 <pre style={{
-                  fontSize: '11px', color: '#8aafd4', whiteSpace: 'pre-wrap',
-                  fontFamily: 'JetBrains Mono', lineHeight: '1.7',
-                  background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '3px',
-                  maxHeight: '200px', overflowY: 'auto'
+                  fontSize: '11px',
+                  color: '#111827',
+                  whiteSpace: 'pre-wrap',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  lineHeight: '1.7',
+                  background: '#f9fafb',
+                  padding: '12px',
+                  borderRadius: '4px',
+                  border: '1px solid #e5e7eb',
+                  maxHeight: '200px',
+                  overflowY: 'auto',
                 }}>
                   {report.alertNarrative}
                 </pre>
-                <div style={{ fontSize: '9px', color: '#2a3f5f', marginTop: '8px', textAlign: 'right' }}>
+                <div style={{
+                  fontSize: '9px',
+                  color: '#6b7280',
+                  marginTop: '8px',
+                  textAlign: 'right',
+                }}>
                   STATUS: {report.status}
                 </div>
               </div>

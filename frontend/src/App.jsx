@@ -13,16 +13,20 @@ import Alerts from './pages/Alerts'
 export default function App() {
   return (
     <BrowserRouter>
-      <Toaster position="bottom-right" toastOptions={{
-        style: {
-          background: '#080f1e',
-          color: '#e8f4ff',
-          border: '1px solid #0f2040',
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: '12px',
-          borderRadius: '4px',
-        }
-      }} />
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            background: '#ffffff',
+            color: '#111827',
+            border: '1px solid #d1d5db',
+            fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+            fontSize: '13px',
+            borderRadius: '8px',
+            boxShadow: '0 10px 30px rgba(15,23,42,0.12)',
+          },
+        }}
+      />
      
       <TickerTape />
       <div style={{ display: 'flex', minHeight: '100vh', paddingTop: '32px' }}>

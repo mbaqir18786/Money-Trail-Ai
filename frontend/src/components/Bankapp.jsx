@@ -1,4 +1,3 @@
-// frontend/src/components/BankApp.jsx
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 
@@ -55,10 +54,7 @@ function findCycle(graph) {
   return null
 }
 
-// ─── BankApp receives frozenAccounts as a plain array (never a Set)
-// This avoids React prop comparison issues with Sets entirely
 export default function BankApp({ onTransfer, soundEngine, frozenAccounts = [] }) {
-  // frozenAccounts is an array of frozen account ID strings e.g. ['ACC001','ACC002','ACC003']
   const isFrozen = (id) => frozenAccounts.includes(id)
   const anyFrozen = frozenAccounts.length > 0
 
@@ -80,13 +76,10 @@ export default function BankApp({ onTransfer, soundEngine, frozenAccounts = [] }
     return () => { clearInterval(clock); clearTimeout(splash) }
   }, [])
 
-  // ── THE CORRECT FREEZE/UNFREEZE SCREEN LOGIC ──────────────
-  // Runs whenever frozenAccounts prop changes (parent re-renders with new array)
   useEffect(() => {
     const activeScreens = ['home', 'transfer', 'confirm', 'sent']
 
     if (anyFrozen) {
-      // If ANY account in the frozen list matches current from/to, go to wall
       if (activeScreens.includes(screen)) {
         const fromFrozen = isFrozen(fromAccount)
         const toFrozen   = toAccount && isFrozen(toAccount)
@@ -95,14 +88,11 @@ export default function BankApp({ onTransfer, soundEngine, frozenAccounts = [] }
         }
       }
     } else {
-      // ✅ KEY FIX: When frozenAccounts becomes empty (unfreeze), leave frozen_wall
       if (screen === 'frozen_wall') {
         setScreen('home')
       }
     }
-    // ✅ KEY FIX: Do NOT include 'screen' in deps — that caused infinite loops
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [frozenAccounts]) // only re-run when frozenAccounts array reference changes
+  }, [frozenAccounts])
 
   const refreshSnap = (g) => {
     const snap = []
@@ -156,7 +146,6 @@ export default function BankApp({ onTransfer, soundEngine, frozenAccounts = [] }
   const fmt      = n  => `₹${Math.abs(n).toLocaleString('en-IN')}`
   const accLabel = id => { const a = ALL_ACCOUNTS.find(x => x.id === id); return a ? `${a.id} — ${a.name} ${a.no}` : id }
 
-  // SPLASH
   if (screen === 'splash') return (
     <div style={{ ...S.screen, justifyContent:'center', alignItems:'center' }}>
       <div style={{ textAlign:'center' }}>
@@ -172,7 +161,6 @@ export default function BankApp({ onTransfer, soundEngine, frozenAccounts = [] }
     </div>
   )
 
-  // 🔒 FROZEN WALL — shown when account frozen and user tries to transact
   if (screen === 'frozen_wall') return (
     <div style={{ ...S.screen, justifyContent:'center', alignItems:'center', background:'#fff5f5' }}>
       <div style={{ textAlign:'center', padding:'24px 20px' }}>
@@ -201,7 +189,6 @@ export default function BankApp({ onTransfer, soundEngine, frozenAccounts = [] }
     </div>
   )
 
-  // LOGIN
   if (screen === 'login') return (
     <div style={{ ...S.screen, justifyContent:'center', alignItems:'center' }}>
       <div style={{ textAlign:'center', padding:'0 24px', width:'100%' }}>
@@ -224,7 +211,6 @@ export default function BankApp({ onTransfer, soundEngine, frozenAccounts = [] }
     </div>
   )
 
-  // HOME
   if (screen === 'home') return (
     <div style={{ ...S.screen, justifyContent:'flex-start' }}>
       <div style={{ background:'linear-gradient(135deg,#1e3a5f,#2d5a8e)', padding:'14px 16px', display:'flex', justifyContent:'space-between', alignItems:'center', color:'#fff', flexShrink:0 }}>
@@ -275,7 +261,6 @@ export default function BankApp({ onTransfer, soundEngine, frozenAccounts = [] }
     </div>
   )
 
-  // TRANSFER
   if (screen === 'transfer') return (
     <div style={{ ...S.screen, justifyContent:'flex-start' }}>
       <div style={S.hdr}><button onClick={reset} style={S.back}>←</button><span style={{ fontSize:15,fontWeight:700,color:'#111827' }}>Fund Transfer</span><div style={{ width:32 }}/></div>
@@ -317,7 +302,6 @@ export default function BankApp({ onTransfer, soundEngine, frozenAccounts = [] }
     </div>
   )
 
-  // CONFIRM
   if (screen === 'confirm') return (
     <div style={{ ...S.screen, justifyContent:'flex-start' }}>
       <div style={S.hdr}><button onClick={()=>setScreen('transfer')} style={S.back}>←</button><span style={{ fontSize:15,fontWeight:700,color:'#111827' }}>Confirm Transfer</span><div style={{ width:32 }}/></div>
@@ -340,7 +324,6 @@ export default function BankApp({ onTransfer, soundEngine, frozenAccounts = [] }
     </div>
   )
 
-  // SENT
   if (screen === 'sent') return (
     <div style={{ ...S.screen, justifyContent:'center', alignItems:'center', padding:24, textAlign:'center' }}>
       {cycleFound?(<>
