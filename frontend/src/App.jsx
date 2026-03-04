@@ -4,11 +4,10 @@ import Navbar from './components/Navbar'
 import TickerTape from './components/TickerTape'
 import Dashboard from './pages/Dashboard'
 import GraphView from './pages/GraphView'
-import Alerts from './pages/Alerts'
 import Investigation from './pages/Investigation'
 import IndiaMap from './pages/IndiaMap'
-
-    import Intelligence from './pages/Intelligence.jsx'
+import Intelligence from './pages/Intelligence.jsx'
+import Alerts from './pages/Alerts'
 
 
 export default function App() {
@@ -36,6 +35,7 @@ export default function App() {
             <Route path="/investigation" element={<Investigation />} />
             <Route path="/map" element={<IndiaMap />} />
               <Route path="/intelligence" element={<Intelligence />} />
+              
           </Routes>
         </main>
       </div>
